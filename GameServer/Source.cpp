@@ -7,6 +7,10 @@
 
 int main()
 {
+	
 	PlayerInfo playerInfo;
+	Server::Run(5000, 4, false);
+
+	while (1);
 	return 0;
 }

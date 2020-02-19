@@ -1,17 +1,26 @@
+#pragma once
+#include <iostream>
+#include <thread>
 #include "Server.h"
 
 sf::TcpListener listener;
 sf::SocketSelector socketSelector;
 std::vector<std::vector<sf::TcpSocket*>> sockets;
+static int serverRooms = 0;
 
 namespace Server {
 	void DebugConsole() {
 		while (1) {
 			system("cls");
-			std::cout << "Unassigned Sockets [" << sockets[0].size() << "] " << std::endl;
-			std::cout << "Rooms [" << sockets.size() - 1 << "] " << std::endl;
-			for (int i = 1; i < sockets.size(); i++) {
-				std::cout << "   " << "Room [" << i << "]: Sockets [" << sockets[i].size() << " / " << sockets[i].size() << "]" << std::endl;
+			if (sockets.size() > 0) {
+				std::cout << "Unassigned Sockets [" << sockets[0].size() << "] " << std::endl;
+				std::cout << "Rooms [" << sockets.size() - 1 << "] " << std::endl;
+				for (int i = 1; i < sockets.size(); i++) {
+					std::cout << "   " << "Room [" << i << "]: Sockets [" << sockets[i].size() << " / " << sockets[i].size() << "]" << std::endl;
+				}
+			}
+			else {
+				std::cout << "Empty Server" << std::endl;
 			}
 
 			std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -20,7 +29,7 @@ namespace Server {
 	void ManageSockets() {
 		while (1) {
 			if (socketSelector.wait()) {
-				if (socketSelector.isReady(listener) && sockets.size() - 1 <= MAX_SERVER_ROOMS) {
+				if (socketSelector.isReady(listener) && sockets.size() - 1 <= serverRooms) {
 					// The listener is ready: there is a pending connection
 					sf::TcpSocket* client = new sf::TcpSocket;
 					// Set socket blocking mode
@@ -81,18 +90,19 @@ namespace Server {
 			}
 		}
 	}
-	void Run()
+	void Run(int port, int maxServerRooms, bool debug)
 	{
-		if (listener.listen(PORT) == sf::Socket::Status::Done) {
+		serverRooms = maxServerRooms;
+		if (listener.listen(port) == sf::Socket::Status::Done) {
 			socketSelector.add(listener);
 		}
 
 		std::thread manageSocketThread(ManageSockets);
 		manageSocketThread.detach();
-		if (DEBUG) {
+
+		if (debug) {
 			std::thread debugger(&DebugConsole);
 			debugger.detach();
-
 		}
 	}
 }
