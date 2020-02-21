@@ -19,7 +19,7 @@ public:
 
 
 	ServerRoom(int _maxClients);
-	void AddSocket(sf::TcpSocket *socket);
+	void AddSocket(sf::TcpSocket *socketToBootstrapServer);
 	sf::TcpSocket &PopSocket(int index);
 	sf::TcpSocket &GetSocket(int index);
 	int GetSocketsCount();

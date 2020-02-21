@@ -36,7 +36,7 @@ namespace Network {
 			unsigned int disconnectPingCycles;
 
 			short port;
-			sf::UdpSocket socket;
+			sf::UdpSocket socketToBootstrapServer;
 			sf::Packet pingPacket;
 
 			void ResendCriticalPackets();
@@ -66,7 +66,7 @@ namespace Network {
 			bool isRunning;
 			void ManageSocket();
 			void Pong();
-			sf::UdpSocket socket;
+			sf::UdpSocket socketToBootstrapServer;
 			sf::IpAddress serverIp;
 			unsigned int serverPort;
 			void(*FunctionProtocol)(Client &_client, sf::Packet& packet);
@@ -98,7 +98,7 @@ namespace Network {
 			std::vector<std::pair<std::string, unsigned short>> directions;
 			unsigned short connectPort;
 			unsigned short localPort;
-			sf::TcpSocket socket;
+			sf::TcpSocket socketToBootstrapServer;
 			std::vector<sf::TcpSocket*> sockets;
 		};
 
@@ -131,7 +131,7 @@ namespace Network {
 
 			std::string ip;
 			short connectPort;
-			sf::TcpSocket socket;
+			sf::TcpSocket socketToBootstrapServer;
 
 		};
 

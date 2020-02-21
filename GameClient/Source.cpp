@@ -22,7 +22,7 @@ int main()
 	TCP_PEER.Run(Protocol, "localhost", 50000, true);
 	PlayerInfo playerInfo;
 	Graphics g;
-	g.DrawDungeon();
+	//g.DrawDungeon();
 	while (1);
 	return 0;
 }

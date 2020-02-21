@@ -13,7 +13,7 @@ int main()
 {
 	PlayerInfo playerInfo;
 	//TCP_SERVER.Run(Protocol, 50000, 4, true);
-	TCP_BTSSERVER.Run(2, 50000);
+	TCP_BTSSERVER.Run(4, 50000);
 
 	while (1);
 	return 0;

@@ -31,7 +31,7 @@ void TCP::Client::Run(void(*funcProtocol)(Client &_client, sf::Packet& packet), 
 	FunctionProtocol = funcProtocol;
 	ip = _ip;
 	connectPort = _port;
-	socket.connect(ip, connectPort);
+	socketToBootstrapServer.connect(ip, connectPort);
 
 	// Receive packets from Server. Use a thread.
 	std::thread socketManager(&Client::ManageSocket, this);
@@ -40,7 +40,7 @@ void TCP::Client::Run(void(*funcProtocol)(Client &_client, sf::Packet& packet), 
 
 void TCP::Client::Send(sf::Packet& packet)
 {
-	socket.send(packet);
+	socketToBootstrapServer.send(packet);
 }
 
 void TCP::Client::ManageSocket()
@@ -48,7 +48,7 @@ void TCP::Client::ManageSocket()
 	while (1)
 	{
 		sf::Packet packet;
-		if (socket.receive(packet) == sf::Socket::Status::Done)
+		if (socketToBootstrapServer.receive(packet) == sf::Socket::Status::Done)
 			FunctionProtocol(Instance(), packet);
 	}
 }
@@ -259,9 +259,9 @@ void TCP::Peer::Run(void(*funcProtocol)(Peer &_peer, sf::Packet &packet), std::s
 	ip = _ip;
 	connectPort = _port;
 
-	if (socket.connect(ip, connectPort) == sf::Socket::Status::Done) {
-		socketSelector.add(socket);
-		localPort = socket.getLocalPort();
+	if (socketToBootstrapServer.connect(ip, connectPort) == sf::Socket::Status::Done) {
+		socketSelector.add(socketToBootstrapServer);
+		localPort = socketToBootstrapServer.getLocalPort();
 	}
 
 
@@ -299,13 +299,13 @@ void TCP::Peer::ManagePeers()
 				}
 
 			}
-			else if (socketSelector.isReady(socket)) {
+			else if (socketSelector.isReady(socketToBootstrapServer)) {
 				//sf::TcpSocket* client = new sf::TcpSocket;
 				// Set socket blocking mode
-				socket.setBlocking(false);
+				socketToBootstrapServer.setBlocking(false);
 
 				sf::Packet packet;
-				sf::Socket::Status stat = socket.receive(packet);
+				sf::Socket::Status stat = socketToBootstrapServer.receive(packet);
 
 
 
@@ -339,7 +339,7 @@ void TCP::Peer::ManagePeers()
 				else if (stat == sf::Socket::Disconnected) {
 					std::cout << "Matchmaking Server Disconnected!" << std::endl;
 					std::cout << directions.size() << std::endl;
-					socket.disconnect();
+					socketToBootstrapServer.disconnect();
 					listener.setBlocking(false);
 					if (listener.listen(localPort) == sf::Socket::Status::Done) {
 						socketSelector.add(listener);
@@ -366,8 +366,12 @@ void TCP::Peer::ManagePeers()
 					if (socketSelector.isReady(*sockets[i])) {
 						// Manage other peer socket
 						sf::Packet pack;
-						if (sockets[i]->receive(pack) == sf::Socket::Done) {
+						sf::Socket::Status status = sockets[i]->receive(pack);
+						if (status == sf::Socket::Done) {
 							FunctionProtocol(Instance(), pack);
+						}
+						else if (status == sf::Socket::Disconnected) {
+							sockets.erase(sockets.begin() + i);
 						}
 					}
 				}
@@ -437,16 +441,16 @@ void TCP::BootstrapServer::ManageSockets()
 					std::cout << "Connected new socket!" << std::endl;
 					std::cout << "Socket count: " << sockets.size() << std::endl;
 
-					sf::Packet pack;
-					pack << sockets.size();
-					std::cout << sockets.size() << std::endl;
-					for (int i = 0; i < sockets.size() - 1; i++) {
-						std::cout << "Adding socket data: " << "IP: " << sockets[i]->getRemoteAddress() << "SERVER_PORT: " << sockets[i]->getRemotePort() << std::endl;
-						pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
+					//sf::Packet pack;
+					//pack << sockets.size();
+					//std::cout << sockets.size() << std::endl;
+					//for (int i = 0; i < sockets.size() - 1; i++) {
+					//	std::cout << "Adding socket data: " << "IP: " << sockets[i]->getRemoteAddress() << "SERVER_PORT: " << sockets[i]->getRemotePort() << std::endl;
+					//	pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
 
 
-					}
-					sockets[sockets.size() - 1]->send(pack);
+					//}
+					//sockets[sockets.size() - 1]->send(pack);
 				}
 				else
 				{
@@ -457,7 +461,22 @@ void TCP::BootstrapServer::ManageSockets()
 
 
 				// Disconnect when all peers linked
+				// Give all sockets to clients before disconnecting
 				if (sockets.size() >= maxUsers) {
+
+					sf::Packet pack;
+					pack << sockets.size();
+					std::cout << sockets.size() << std::endl;
+					for (int i = 0; i < sockets.size() - 1; i++) {
+						std::cout << "Adding socket data: " << "IP: " << sockets[i]->getRemoteAddress() << "SERVER_PORT: " << sockets[i]->getRemotePort() << std::endl;
+						pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
+
+
+					}
+					sockets[sockets.size() - 1]->send(pack);
+
+					// ------
+
 					std::cout << "All peers connected. Disconnecting matching server..." << std::endl;
 					for (int i = 0; i < sockets.size(); i++) {
 						sockets[i]->disconnect();
@@ -474,6 +493,7 @@ void TCP::BootstrapServer::ManageSockets()
 					sf::Packet pack;
 					if (sockets[i]->receive(pack) == sf::Socket::Disconnected) {
 						sockets[i]->disconnect();
+						sockets.erase(sockets.begin() + i);
 					}
 				}
 			}
@@ -503,13 +523,13 @@ void Network::UDP::Server::PongReceived(unsigned int _userId)
 
 void Network::UDP::Server::Send(sf::Packet _pack, ConnectionData dir)
 {
-	socket.send(_pack, dir.ip, dir.port);
+	socketToBootstrapServer.send(_pack, dir.ip, dir.port);
 }
 
 void Network::UDP::Server::SendBroadcast(sf::Packet _pack, unsigned int _pingTime)
 {
 	for (auto i = connectionsById.begin(); i != connectionsById.end(); i++) {
-		socket.send(_pack, i->second->ip, i->second->port);
+		socketToBootstrapServer.send(_pack, i->second->ip, i->second->port);
 		i->second->pingTime += _pingTime;
 	}
 }
@@ -551,7 +571,7 @@ unsigned int Network::UDP::Server::AddCriticalPacket(unsigned int _playerUid, sf
 void Network::UDP::Server::ResendCriticalPackets()
 {
 	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
-		socket.send(i->second.packet, connectionsById[i->second.playerUid]->ip, connectionsById[i->second.playerUid]->port);
+		socketToBootstrapServer.send(i->second.packet, connectionsById[i->second.playerUid]->ip, connectionsById[i->second.playerUid]->port);
 	}
 }
 
@@ -577,7 +597,7 @@ void Network::UDP::Server::ManageSocketsThread()
 		sf::Packet pack;
 		ConnectionData dir;
 		// FIND USER ID
-		if (socket.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
+		if (socketToBootstrapServer.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
 			FunctionProtocol(Instance(), dir, pack);
 			//if (!connectionsByData.count(dir)){//connectionsByData[dir] == 0) {
 			//	unsigned int uid = NEW_UID;
@@ -627,7 +647,7 @@ void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf
 	criticalPacketMillis = criticTimer;
 	pingerMillis = pingTime;
 	port = _port;
-	sf::Socket::Status status = socket.bind(port);
+	sf::Socket::Status status = socketToBootstrapServer.bind(port);
 	if (status != sf::Socket::Done) {
 		std::cout << "Can't bind port!" << std::endl;
 	}
@@ -675,7 +695,7 @@ void UDP::Client::Run(bool _debug)
 
 void Network::UDP::Client::Send(sf::Packet _packet)
 {
-	socket.send(_packet, serverIp, serverPort);
+	socketToBootstrapServer.send(_packet, serverIp, serverPort);
 }
 
 UDP::Client::Client() {
@@ -686,7 +706,7 @@ void UDP::Client::ManageSocket() {
 	while (isRunning) {
 		sf::Packet packet;
 		ConnectionData data;
-		socket.receive(packet, data.ip, data.port);
+		socketToBootstrapServer.receive(packet, data.ip, data.port);
 
 		FunctionProtocol(Instance(), packet);
 	}
@@ -698,7 +718,7 @@ void UDP::Client::Init(void(*funcProtocol)(Client &client, sf::Packet &_pack), s
 	serverIp = _ip;
 	serverPort = _serverPort;
 
-	socket.bind(_localPort);
+	socketToBootstrapServer.bind(_localPort);
 }
 
 #pragma endregion

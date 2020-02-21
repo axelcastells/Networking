@@ -6,10 +6,10 @@ ServerRoom::ServerRoom(int _maxClients)
 	maxClients = _maxClients;
 }
 
-void ServerRoom::AddSocket(sf::TcpSocket *socket)
+void ServerRoom::AddSocket(sf::TcpSocket *socketToBootstrapServer)
 {
 	if (sockets.size() <= maxClients) {
-		sockets.push_back(socket);
+		sockets.push_back(socketToBootstrapServer);
 	}
 }
 
