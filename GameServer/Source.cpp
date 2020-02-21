@@ -3,13 +3,17 @@
 #include <SFML\Graphics.hpp>
 #include <SFML\Network.hpp>
 #include <PlayerInfo.h>
-#include "Server.h"
+#include "VortexOnline.h"
+
+//void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) {
+//	
+//}
 
 int main()
 {
-	
 	PlayerInfo playerInfo;
-	Server::Run(5000, 4, false);
+	//TCP_SERVER.Run(Protocol, 50000, 4, true);
+	TCP_BTSSERVER.Run(2, 50000);
 
 	while (1);
 	return 0;
