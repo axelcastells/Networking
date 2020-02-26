@@ -264,7 +264,6 @@ void TCP::Peer::Run(void(*funcProtocol)(Peer &_peer, sf::Packet &packet), std::s
 		localPort = socketToBootstrapServer.getLocalPort();
 	}
 
-
 	std::thread peersManager(&Peer::ManagePeers, this);
 	peersManager.detach();
 	if (debug) {
@@ -299,7 +298,7 @@ void TCP::Peer::ManagePeers()
 				}
 
 			}
-			else if (socketSelector.isReady(socketToBootstrapServer)) {
+			if (socketSelector.isReady(socketToBootstrapServer)) {
 				//sf::TcpSocket* client = new sf::TcpSocket;
 				// Set socket blocking mode
 				socketToBootstrapServer.setBlocking(false);
@@ -312,54 +311,33 @@ void TCP::Peer::ManagePeers()
 				if (stat == sf::Socket::Done) {
 					std::cout << "Received Server Packet" << std::endl;
 
+					std::string _ip;
+					unsigned short _port;
+					packet >> _ip >> _port;
 
-
-
-					int usersNum;
-					packet >> usersNum;
-					std::cout << usersNum << std::endl;
-
-					//std::vector<std::pair<std::string, short>> directions;
-
-					for (int i = 0; i < usersNum; i++) {
-						std::string _ip;
-						unsigned short _port;
-						packet >> _ip >> _port;
-
-						directions.push_back(std::pair<std::string, unsigned short>(_ip, _port));
-
-						std::cout << "Socket [" << i << "] IP: " << _ip << "SERVER_PORT: " << _port << std::endl;
-						//directions.push_back(std::pair<std::string, short>(ip, connectPort));
-
-
+					sf::TcpSocket* sock = new sf::TcpSocket();
+					sock->setBlocking(true);
+					if (sock->connect(_ip, _port) == sf::Socket::Done)
+					{
+						std::cout << "Added Socket: " << "IP: " << sock->getRemoteAddress() << "SERVER_PORT: " << sock->getRemotePort() << std::endl;
+						socketSelector.add(*sock);
+						sockets.push_back(sock);
 					}
 
 				}
 				else if (stat == sf::Socket::Disconnected) {
 					std::cout << "Matchmaking Server Disconnected!" << std::endl;
 					std::cout << directions.size() << std::endl;
+					unsigned short port = socketToBootstrapServer.getLocalPort();
 					socketToBootstrapServer.disconnect();
 					listener.setBlocking(false);
-					if (listener.listen(localPort) == sf::Socket::Status::Done) {
+					if (listener.listen(port) == sf::Socket::Status::Done) {
 						socketSelector.add(listener);
 					}
 
-					for (int i = 0; i < directions.size(); i++) {
-						sf::TcpSocket* sock = new sf::TcpSocket();
-						sock->setBlocking(true);
-						std::cout << "Storing connection data" << std::endl;
-						if (sock->connect(directions[i].first, directions[i].second) == sf::Socket::Done)
-						{
-							std::cout << "Added Socket: " << "IP: " << sock->getRemoteAddress() << "SERVER_PORT: " << sock->getRemotePort() << std::endl;
-							socketSelector.add(*sock);
-							sockets.push_back(sock);
-						}
-					}
-
 				}
-
-
 			}
+
 			else {
 				for (int i = 0; i < sockets.size(); i++) {
 					if (socketSelector.isReady(*sockets[i])) {
@@ -432,24 +410,20 @@ void TCP::BootstrapServer::ManageSockets()
 				{
 					// Add the new client to the clients list
 					std::cout << "Llega el cliente con puerto: " << client->getRemotePort() << std::endl;
-					sockets.push_back(client);
-					// Add the new client to the selector so that we will
-					// be notified when he sends something
-					socketSelector.add(*client);
 
 					std::cout << "Connected new socket!" << std::endl;
 					std::cout << "Socket count: " << sockets.size() << std::endl;
 
-					//sf::Packet pack;
-					//pack << sockets.size();
-					//std::cout << sockets.size() << std::endl;
-					//for (int i = 0; i < sockets.size() - 1; i++) {
-					//	std::cout << "Adding socket data: " << "IP: " << sockets[i]->getRemoteAddress() << "SERVER_PORT: " << sockets[i]->getRemotePort() << std::endl;
-					//	pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
+					for (int i = 0; i < sockets.size(); i++) {
+						sf::Packet pack;
+						pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
+						client->send(pack);
 
+						client->disconnect();
+					}
 
-					//}
-					//sockets[sockets.size() - 1]->send(pack);
+					sockets.push_back(client);
+					socketSelector.add(*client);
 				}
 				else
 				{
@@ -457,44 +431,13 @@ void TCP::BootstrapServer::ManageSockets()
 					std::cout << "Error al recoger conexión nueva\n";
 					delete client;
 				}
-
-
-				// Disconnect when all peers linked
-				// Give all sockets to clients before disconnecting
-				if (sockets.size() >= maxUsers) {
-
-					sf::Packet pack;
-					pack << (int)sockets.size();
-					std::cout << sockets.size() << std::endl;
-					for (int i = 0; i < sockets.size(); i++) {
-						std::cout << "Adding socket data: " << "IP: " << sockets[i]->getRemoteAddress() << "SERVER_PORT: " << sockets[i]->getRemotePort() << std::endl;
-						pack << sockets[i]->getRemoteAddress().toString() << sockets[i]->getRemotePort();
-
-
-					}
-
-					for (int i = 0; i < sockets.size(); i++) {
-						sockets[i]->send(pack);
-					}
-					//sockets[sockets.size() - 1]->send(pack);
-
-					// ------
-
-					std::cout << "All peers connected. Disconnecting matching server..." << std::endl;
-					for (int i = 0; i < sockets.size(); i++) {
-						sockets[i]->disconnect();
-					}
-
-					runing = false;
-				}
-
-
 			}
 
 			for (int i = 0; i < sockets.size(); i++) {
 				if (socketSelector.isReady(*sockets[i])) {
 					sf::Packet pack;
 					if (sockets[i]->receive(pack) == sf::Socket::Disconnected) {
+						std::cout << "Disconnected socket!" << std::endl;
 						sockets[i]->disconnect();
 						sockets.erase(sockets.begin() + i);
 					}

@@ -19,7 +19,7 @@ void Protocol(Network::TCP::Peer &peer, sf::Packet &packet) {
 
 int main()
 {
-	TCP_PEER.Run(Protocol, "localhost", 50000, true);
+	TCP_PEER.Run(Protocol, "localhost", 50001, true);
 	PlayerInfo playerInfo;
 	Graphics g;
 	//g.DrawDungeon();
