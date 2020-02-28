@@ -111,7 +111,7 @@ namespace Network {
 			void ManageSockets();
 			sf::TcpListener listener;
 			sf::SocketSelector socketSelector;
-			std::vector<sf::TcpSocket*> sockets;
+			std::vector<ConnectionData> directions;
 			short connectPort;
 			int maxUsers;
 		};
