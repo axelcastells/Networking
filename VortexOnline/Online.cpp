@@ -466,13 +466,13 @@ void Network::UDP::Server::PongReceived(unsigned int _userId)
 
 void Network::UDP::Server::Send(sf::Packet _pack, ConnectionData dir)
 {
-	socketToBootstrapServer.send(_pack, dir.ip, dir.port);
+	socket.send(_pack, dir.ip, dir.port);
 }
 
 void Network::UDP::Server::SendBroadcast(sf::Packet _pack, unsigned int _pingTime)
 {
 	for (auto i = connectionsById.begin(); i != connectionsById.end(); i++) {
-		socketToBootstrapServer.send(_pack, i->second->ip, i->second->port);
+		socket.send(_pack, i->second->ip, i->second->port);
 		i->second->pingTime += _pingTime;
 	}
 }
@@ -514,7 +514,7 @@ unsigned int Network::UDP::Server::AddCriticalPacket(unsigned int _playerUid, sf
 void Network::UDP::Server::ResendCriticalPackets()
 {
 	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
-		socketToBootstrapServer.send(i->second.packet, connectionsById[i->second.playerUid]->ip, connectionsById[i->second.playerUid]->port);
+		socket.send(i->second.packet, connectionsById[i->second.playerUid]->ip, connectionsById[i->second.playerUid]->port);
 	}
 }
 
@@ -540,7 +540,7 @@ void Network::UDP::Server::ManageSocketsThread()
 		sf::Packet pack;
 		ConnectionData dir;
 		// FIND USER ID
-		if (socketToBootstrapServer.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
+		if (socket.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
 			FunctionProtocol(Instance(), dir, pack);
 			//if (!connectionsByData.count(dir)){//connectionsByData[dir] == 0) {
 			//	unsigned int uid = NEW_UID;

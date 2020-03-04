@@ -36,7 +36,7 @@ namespace Network {
 			unsigned int disconnectPingCycles;
 
 			short port;
-			sf::UdpSocket socketToBootstrapServer;
+			sf::UdpSocket socket;
 			sf::Packet pingPacket;
 
 			void ResendCriticalPackets();
