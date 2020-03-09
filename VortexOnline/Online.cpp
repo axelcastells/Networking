@@ -590,7 +590,7 @@ void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf
 	criticalPacketMillis = criticTimer;
 	pingerMillis = pingTime;
 	port = _port;
-	sf::Socket::Status status = socketToBootstrapServer.bind(port);
+	sf::Socket::Status status = socket.bind(port);
 	if (status != sf::Socket::Done) {
 		std::cout << "Can't bind port!" << std::endl;
 	}
