@@ -14,7 +14,7 @@
 //
 //}
 void Protocol(Network::TCP::Peer &peer, sf::Packet &packet) {
-
+	//Switch amb els diferents tipus de packets
 }
 
 int main()
