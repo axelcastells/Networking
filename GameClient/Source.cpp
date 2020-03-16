@@ -8,48 +8,69 @@
 #include <fcntl.h>
 #include "Graphics.h"
 #include "VortexOnline.h"
+#include "Protocol.h"
 
-enum Header { START, UPDATE_POSITIONS, YOUR_TURN, MOVE, GUESS, SUPOSE, ACUSE, ACUSE_SUCCESS, ACUSE_FAIL, SHOW_CARDS, SHOWING_CARDS };
 
 void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
-	//Receive del packet
+	//Switch amb els diferents tipus de packets rebuts
 
-	//Switch amb els diferents tipus de packets
+	int intHead;
+	packet >> intHead;
+	Header head = (Header)intHead;
 
-	switch (Header)
+	//Només missatges rebuts, respostes al main.
+	switch (head)
 	{
 	case START:
+		
 		break;
 
 	case UPDATE_POSITIONS:
+
 		break;
 
 	case YOUR_TURN:
+
 		break;
 
 	case MOVE:
+
 		break;
 
+		//Permet fer una demanda al servidor quan arribi a una sala
 	case GUESS:
+
 		break;
 
+		//Rebre el supose d'un altre client
 	case SUPOSE:
+
 		break;
 
+		//Rebre el acuse d'un altre client
 	case ACUSE:
+
 		break;
 
+		//Rebre la notificació de qui guanya la partida i acabar
 	case ACUSE_SUCCESS:
+
 		break;
 
+		//Rebre la notificacio de qui falla i queda eliminat
 	case ACUSE_FAIL:
+
 		break;
 
+		//El client ensenya la carta escollida al client pertinent a traves del servidor.
 	case SHOW_CARDS:
+
 		break;
 
+		//Llegir quin client esta ensenyant cartes a un altre
 	case SHOWING_CARDS:
+
 		break;
 
 	}
@@ -121,9 +142,18 @@ int main()
 	loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
 	
+
+	//Partida
+	while (!startGame)
+	{
+		//Esperant jugadors a la partida
+
+
+	};
+
 	Graphics g;
 	g.DrawDungeon();
-	while (1);
+	
 	
 	return 0;
 }
