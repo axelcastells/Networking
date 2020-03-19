@@ -6,6 +6,19 @@
 #include "VortexOnline.h"
 #include "Protocol.h"
 
+//ITEMS que contorla el servidor
+int dado1, dado2;
+//resultat son les 3 cartes "guanyadores"
+std::list<carta> baraja, resultat;
+
+std::vector<PlayerInfo> players;
+std::list<sf::TcpSocket*>::iterator currentPlayer;
+int currentPlayer_id;
+sf::Packet command;
+
+
+//Posar el enum amb les comandes a Playerinfo enlloc de protocol.h?
+
 void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) {
 	
 	// Switch amb els diferents missatges a enviar o rebre dels clients?
@@ -74,6 +87,96 @@ void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, i
 	}
 }
 
+//Montar les funcions dins del protocol
+
+//Funcions del joc controlades pel servidor
+
+//Crear cartes
+void CreateCards()
+{
+	// 6 Player Cards
+	baraja.push_back(carta(CHARACTER, "Amapola", 1));
+	baraja.push_back(carta(CHARACTER, "Rubio", 2));
+	baraja.push_back(carta(CHARACTER, "Orquidea", 3));
+	baraja.push_back(carta(CHARACTER, "Prado", 4));
+	baraja.push_back(carta(CHARACTER, "Celeste", 5));
+	baraja.push_back(carta(CHARACTER, "Mora", 6));
+
+	// 6 Weapon Cards
+	baraja.push_back(carta(WEAPON, "Puñal", 7));
+	baraja.push_back(carta(WEAPON, "Cuerda", 8));
+	baraja.push_back(carta(WEAPON, "Candelabro", 9));
+	baraja.push_back(carta(WEAPON, "Pistola", 10));
+	baraja.push_back(carta(WEAPON, "Tuberia de Plomo", 11));
+	baraja.push_back(carta(WEAPON, "Herramienta", 12));
+
+	// 9 Rooms
+	baraja.push_back(carta(ROOM, "Biblioteca", 13));
+	baraja.push_back(carta(ROOM, "Cocina", 14));
+	baraja.push_back(carta(ROOM, "Billar", 15));
+	baraja.push_back(carta(ROOM, "Baile", 16));
+	baraja.push_back(carta(ROOM, "Invernadero", 17));
+	baraja.push_back(carta(ROOM, "Comedor", 18));
+	baraja.push_back(carta(ROOM, "Vestibulo", 19));
+	baraja.push_back(carta(ROOM, "Salon", 20));
+	baraja.push_back(carta(ROOM, "Estudio", 21));
+}
+
+// Repartir les cartes
+
+void repartirCartes()
+{
+
+}
+
+// Enviar i Rebre Pista
+
+void enviarPistes()
+{
+
+}
+
+// Tirar daus
+
+void tirarDaus()
+{
+	bool pista = false;
+	int r = 0;
+	dado1 = rand() % 6 + 1;
+	dado2 = rand() % 6 + 1;
+
+	if (dado1 == 1 || dado2 == 1) // Si treiem un 1 ensenyem pista
+	{
+		pista = true;
+		r = rand() % 2;
+	}
+
+	dado1 += dado2;
+	
+	//enviar al client el resultat de la tirada
+}
+
+
+// Setup resultado partida
+std::list<carta> definirResultat(std::list<carta> &baraja)
+{
+	std::list<carta> c;
+	std::list<carta>::iterator it = baraja.begin();
+
+	int r = rand() % 6;
+	std::advance(it, r);
+	c.push_back(*it);
+	baraja.erase(it);
+
+	r = rand() % 5 + 6;
+	it = baraja.begin();
+	std::advance(it, r);
+	c.push_back(*it);
+	baraja.erase(it);
+	return c;
+}
+
+
 int main()
 {
 	PlayerInfo playerInfo;
@@ -86,7 +189,7 @@ int main()
 	while (!startGame)
 	{
 		//Esperant jugadors a la partida
-
+		
 
 	};
 	return 0;

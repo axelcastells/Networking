@@ -1,5 +1,10 @@
 #pragma once
+#include <list>
 #include <SFML\Graphics.hpp>
+
+enum Cardtype { CHARACTER , WEAPON, ROOM};
+
+enum State { YOURTURN, WAIT};
 
 class PlayerInfo
 {
@@ -31,4 +36,23 @@ public:
 	void SetColor(Color _color);
 	unsigned short GetIdColor();
 	Color IdColorToColor(unsigned short);
+
+	std::list<carta> myCards;
+};
+
+class carta
+{
+public:
+	Cardtype tipo;
+	std::string Cardname;
+	int id;
+
+	carta ( Cardtype _tipo, std::string _cardname, int _id)
+	{
+		tipo = _tipo;
+		Cardname = _cardname;
+		id = _id;
+	}
+
+private:
 };

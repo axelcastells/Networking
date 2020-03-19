@@ -124,8 +124,7 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 int main()
 {
-	//CONNECT + SETUP
-	TCP_CLIENT.Run(Protocol, "localhost", 50001);
+	//Client local setup
 	PlayerInfo playerInfo;
 	sf::TcpSocket serverSocket;
 	sf::Packet loginPacket;
@@ -142,6 +141,8 @@ int main()
 	loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
 	
+	//Connect a Servidor
+	TCP_CLIENT.Run(Protocol, "localhost", 50001);
 
 	//Partida
 	while (!startGame)
