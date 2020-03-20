@@ -86,6 +86,8 @@ void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, i
 
 	}
 }
+//roomindex > 0 esta dins d'una sala.
+
 
 //Montar les funcions dins del protocol
 
@@ -174,6 +176,8 @@ std::list<carta> definirResultat(std::list<carta> &baraja)
 	c.push_back(*it);
 	baraja.erase(it);
 	return c;
+
+	
 }
 
 

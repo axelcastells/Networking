@@ -18,10 +18,6 @@ PlayerInfo::PlayerInfo(std::string _name) :
 
 PlayerInfo::PlayerInfo(std::string _name, unsigned short _color) : name(_name), position(sf::Vector2i(0, 0)), lives(3), color(IdColorToColor(_color)) {}
 
-PlayerInfo::~PlayerInfo()
-{
-}
-
 std::string PlayerInfo::GetName()
 {
 	return name;
