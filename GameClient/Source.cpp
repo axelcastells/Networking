@@ -24,6 +24,11 @@ std::vector<carta> hand;
 int size = 0;
 int receivedCard = 0;
 int dado1, dado2;
+int dados = dado1 + dado2;
+bool pista = false;
+int pistaType = 0;
+std::string escollirPista;
+std::string suposePlayer;
 
 State estadoPlayer = WAIT;
 sf::Event event;
@@ -163,13 +168,15 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 		}
 
+		packet.clear();
 		break;
 
 	case UPDATE_POSITIONS:
 
 		//Missatge rebut per actualitzar la posició dels jugadors
+		//packet >> 
 
-
+		packet.clear();
 		break;
 
 	case YOUR_TURN:
@@ -177,46 +184,110 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 		//Missatge rebut quan et toca el teu torn
 		estadoPlayer = YOURTURN;
 
+		packet >> dados;
+		std::cout << "En la teva tirada has tret un " << dado1 << " y un " << dado2 << std::endl;
+		
+
+		packet >> pista; //Bool de si ens toca pista
+		
+		packet >> pistaType;
+		if (!pista)
+		{
+			std::cout << "Sense pista, no has tret un 1." << std::endl;
+		}
+		else 
+		{
+			std::cout << "Pots escollir pista." << std::endl;
+
+			pistaType = 0;
+			
+			switch (pistaType)
+			{
+			case 0: // PERSONATGE
+				std::cout << "Tipo: Personatge, Escull entre els següents personatges: Amapola | Rubio | Orquidea | Prado | Celeste | Mora." << std::endl;
+				while (escollirPista != "Amapola" && escollirPista != "Rubio" && escollirPista != "Orquidea" && escollirPista != "Prado" && escollirPista != "Celeste" && escollirPista != "Mora")
+				{
+					std::cout << "Introdueix el nom del personatge que vols obtenir la pista." << std::endl;
+					std::cin >> escollirPista;
+				}
+				break;
+
+			case 1: // Arma
+				std::cout << "Tipo: Arma, Escull entre les següents armes: Puñal | Cuerda | Candelabro | Pistola | Tuberia de Plomo | Herramienta." << std::endl;
+				while (escollirPista != "Puñal" && escollirPista != "Cuerda" && escollirPista != "Candelabro" && escollirPista != "Pistola" && escollirPista != "Herramienta" && escollirPista != "Tuberia de Plomo" && escollirPista != "Tuberia")
+				{
+					std::cout << "Introdueix el nom de l'arma que vols obtenir la pista." << std::endl;
+					std::cin >> escollirPista;
+				}
+				break;
+
+			case 2: // Habitació
+				std::cout << "Tipo: Habitacio, Escull entre les següents habitacions: Biblioteca | Cocina | Billar | Baile | Invernadero | Comedor | Vestibulo | Salon | Estudio" << std::endl;
+				while (escollirPista != "Biblioteca" && escollirPista != "Cocina" && escollirPista != "Billar" && escollirPista != "Baile" && escollirPista != "Invernadero" && escollirPista != "Comedor" && escollirPista != "Vestibulo" && escollirPista != "Salon" && escollirPista != "Estudio")
+				{
+					std::cout << "Introdueix el nom de l'habitacio que vols obtenir la pista." << std::endl;
+					std::cin >> escollirPista;
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		
+		//Falta el moviment, montar el packet amb el tipus de pista que vol i enviarlo
+
+		packet.clear();
 		break;
 
 	case MOVE:
 
-
+		packet.clear();
 		break;
 
 		//Permet fer una demanda al servidor quan arribi a una sala
 	case GUESS:
 
+		packet.clear();
 		break;
 
 		//Rebre el supose d'un altre client
 	case SUPOSE:
 
+		
+		packet >> suposePlayer;
+		std::cout << suposePlayer << std::endl;
+		packet.clear();
 		break;
 
 		//Rebre el acuse d'un altre client
 	case ACUSE:
 
+		packet.clear();
 		break;
 
 		//Rebre la notificació de qui guanya la partida i acabar
 	case ACUSE_SUCCESS:
 
+		packet.clear();
 		break;
 
 		//Rebre la notificacio de qui falla i queda eliminat
 	case ACUSE_FAIL:
 
+		packet.clear();
 		break;
 
 		//El client ensenya la carta escollida al client pertinent a traves del servidor.
 	case SHOW_CARDS:
 
+		packet.clear();
 		break;
 
 		//Llegir quin client esta ensenyant cartes a un altre
 	case SHOWING_CARDS:
 
+		packet.clear();
 		break;
 
 	}
@@ -231,6 +302,11 @@ int main()
 	std::cin >> nickname;
 	//loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
+
+	//TEST AQUI
+	/*hand.push_back(carta(CHARACTER, "Mora", 6));
+	std::cout << "Carta 1: " << hand[0].Cardname << std::endl;*/
+	
 
 	//Connect a Servidor
 	TCP_CLIENT.Run(Protocol, "localhost", 50001);

@@ -14,7 +14,7 @@ std::list<carta> baraja, resultat;
 std::vector<PlayerInfo> players;
 std::list<sf::TcpSocket*>::iterator currentPlayer;
 int currentPlayer_id;
-sf::Packet command;
+sf::Packet packet;
 
 
 //Posar el enum amb les comandes a Playerinfo enlloc de protocol.h?
@@ -128,7 +128,19 @@ void CreateCards()
 
 void repartirCartes()
 {
+	int random;
 
+	for (int i = 0; baraja.size() != 0; i++) 
+	{
+		std::list<carta>::iterator it = baraja.begin();
+		if (baraja.size() > 0)
+		{
+			random = rand() % baraja.size();
+			std::advance(it, random);
+			players[i].myCards.push_back(*it);
+			baraja.erase(it);
+		}
+	}
 }
 
 // Enviar i Rebre Pista
@@ -143,19 +155,19 @@ void enviarPistes()
 void tirarDaus()
 {
 	bool pista = false;
-	int r = 0;
+	int random = 0;
 	dado1 = rand() % 6 + 1;
 	dado2 = rand() % 6 + 1;
 
 	if (dado1 == 1 || dado2 == 1) // Si treiem un 1 ensenyem pista
 	{
 		pista = true;
-		r = rand() % 2;
+		random = rand() % 2;
 	}
-
-	dado1 += dado2;
 	
 	//enviar al client el resultat de la tirada
+
+	packet << YOUR_TURN << dado1 << dado2 << pista << random;
 }
 
 
