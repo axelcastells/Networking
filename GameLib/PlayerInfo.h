@@ -52,6 +52,10 @@ public:
 	void SetColor(Color _color);
 	unsigned short GetIdColor();
 	Color IdColorToColor(unsigned short);
+	
+	sf::Vector2i GetPosition();
+	void SetPosition(sf::Vector2i Position);
+	void SetPosition(int x, int y);
 
 	std::list<carta> myCards;
 };

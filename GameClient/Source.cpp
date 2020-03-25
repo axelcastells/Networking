@@ -20,6 +20,8 @@ int currentPlayersJoined;
 std::vector<PlayerInfo> players;
 std::vector<std::string> packets;
 
+int positionX, positionY;
+
 std::vector<carta> hand;
 int size = 0;
 int receivedCard = 0;
@@ -174,8 +176,16 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 	case UPDATE_POSITIONS:
 
 		//Missatge rebut per actualitzar la posició dels jugadors
-		//packet >> 
 
+		for (int i = 0; i < currentPlayersJoined; i++)
+		{
+			PlayerInfo player;
+			packet >> positionX >> positionY;
+
+			player.SetPosition(positionX,positionY);
+			std::cout << "El jugador " << players[i].GetIdColor << " esta en la posició X: " << players[i].GetPosition.x << " Y: " << players[i].GetPosition.myCards << std::endl;
+			players.push_back(player);
+		}
 		packet.clear();
 		break;
 

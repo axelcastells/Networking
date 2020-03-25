@@ -53,3 +53,18 @@ PlayerInfo::Color PlayerInfo::IdColorToColor(unsigned short _idColor) {
 
 	return _color;
 }
+
+sf::Vector2i PlayerInfo::GetPosition()
+{
+	return position;
+}
+
+void PlayerInfo::SetPosition(sf::Vector2i _Position)
+{
+	position = _Position;
+}
+void PlayerInfo::SetPosition(int _x, int _y)
+{
+	position.x = _x;
+	position.y = _y;
+}
