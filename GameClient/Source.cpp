@@ -71,13 +71,13 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> _color; // PLAYERID
 
 			// Asignar la ID al jugador.
-			players[i].SetColor = _color;
+			players[i].SetColor((PlayerInfo::Color)_color);
 
 			//Asignar la posició inicial al jugador.
 			packet >> positionX >> positionY; //PLAYERPOSITIONS
 
 			player.SetPosition(positionX, positionY);
-			std::cout << "El jugador " << players[i].GetIdColor << " comença en la posició X: " << players[i].GetPosition.x << " Y: " << players[i].GetPosition.myCards << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " comença en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 
@@ -203,7 +203,7 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> positionX >> positionY;
 
 			player.SetPosition(positionX,positionY);
-			std::cout << "El jugador " << players[i].GetIdColor << " esta en la posició X: " << players[i].GetPosition.x << " Y: " << players[i].GetPosition.myCards << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " esta en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 		packet.clear();

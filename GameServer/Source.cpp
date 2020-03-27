@@ -164,7 +164,7 @@ void tirarDaus()
 	//enviar al client el resultat de la tirada
 	// Falta definir a quin client 
 	packet << YOUR_TURN << dado1 << dado2 << pista << random;
-	//TCP_SERVER.Send;
+	TCP_SERVER.Send;
 }
 
 

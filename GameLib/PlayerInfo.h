@@ -50,8 +50,7 @@ public:
 	void SetName(std::string _name);
 	Color GetColor();
 	void SetColor(Color _color);
-	unsigned short GetIdColor();
-	Color IdColorToColor(unsigned short);
+
 	
 	sf::Vector2i GetPosition();
 	void SetPosition(sf::Vector2i Position);
