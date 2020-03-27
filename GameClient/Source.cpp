@@ -336,24 +336,28 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 	}
 }
+int Run() {
+	TCP_CLIENT.Run(Protocol, "localhost", 50000);
+}
 
 int main()
 {
-
+	/*
 	// INIT PLAYER
 	std::string nickname;
 	std::cout << "Enter your nickname: " << std::endl;
 	std::cin >> nickname;
 	//loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
-
+	*/
 	//TEST AQUI
 	/*hand.push_back(carta(CHARACTER, "Mora", 6));
 	std::cout << "Carta 1: " << hand[0].Cardname << std::endl;*/
 	
 
 	//Connect a Servidor
-	TCP_CLIENT.Run(Protocol, "localhost", 50001);
+	std::thread clientThread(Run);
+	clientThread.join();
 
 	//Partida
 	while (!startGame)
