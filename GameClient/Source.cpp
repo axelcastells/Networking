@@ -31,6 +31,7 @@ bool pista = false;
 int pistaType = 0;
 std::string escollirPista;
 std::string suposePlayer;
+std::string Murderer, Weapon, Room;
 
 State estadoPlayer = WAIT;
 sf::Event event;
@@ -56,24 +57,40 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 		// Missatge rebut per començar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
-							//_<COLOR>_<GIVENCARDS>_<IDSCARTES>
+							//_<GIVENCARDS>_<IDSCARTES>
 
+		//FET
 		
 		packet >> currentPlayersJoined;
 
 		// Recorrer el vector per assignar les IDs a cadascun
-		//packet >> players.color;
+		for (int i = 0; i < currentPlayersJoined; i++)
+		{
+			int _color;
+			PlayerInfo player;
+			packet >> _color; // PLAYERID
+
+			// Asignar la ID al jugador.
+			players[i].SetColor = _color;
+
+			//Asignar la posició inicial al jugador.
+			packet >> positionX >> positionY; //PLAYERPOSITIONS
+
+			player.SetPosition(positionX, positionY);
+			std::cout << "El jugador " << players[i].GetIdColor << " comença en la posició X: " << players[i].GetPosition.x << " Y: " << players[i].GetPosition.myCards << std::endl;
+			players.push_back(player);
+		}
 
 		// Assignar les posicions amb el vector com hem fet amb el color
 		//packet >> playerInfo.position;
 		
 		// Cartes rebudes
-		packet >> size; //quantes cartes rebo
+		packet >> size; //GIVENCARDS quantes cartes rebo
 
 		std::cout << "Has rebut %d " << size << " Cartes" << std::endl;
 		for (int i = 0; i < size; i++)
 		{
-			packet >> receivedCard;
+			packet >> receivedCard; //IDCARTES
 			switch (receivedCard)
 			{
 				//CHARACTERS
@@ -175,11 +192,14 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 	case UPDATE_POSITIONS:
 
-		//Missatge rebut per actualitzar la posició dels jugadors
+		//DESMONTAR PACKET -> <UPDATE_POSITIONS>_<PLAYER_ID>_<NEW_POS>
 
+		//Missatge rebut per actualitzar la posició dels jugadors
 		for (int i = 0; i < currentPlayersJoined; i++)
 		{
+			
 			PlayerInfo player;
+			//packet >> players[i].SetColor;
 			packet >> positionX >> positionY;
 
 			player.SetPosition(positionX,positionY);
@@ -191,16 +211,17 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 	case YOUR_TURN:
 
+		// <YOUR_TURN>_<DICE_1>_<DICE_2>_<CLUE_CARDID>
+
 		//Missatge rebut quan et toca el teu torn
 		estadoPlayer = YOURTURN;
 
-		packet >> dados;
+		packet >> dado1 >> dado2;
 		std::cout << "En la teva tirada has tret un " << dado1 << " y un " << dado2 << std::endl;
 		
 
 		packet >> pista; //Bool de si ens toca pista
-		
-		packet >> pistaType;
+
 		if (!pista)
 		{
 			std::cout << "Sense pista, no has tret un 1." << std::endl;
@@ -209,7 +230,8 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 		{
 			std::cout << "Pots escollir pista." << std::endl;
 
-			pistaType = 0;
+			std::cout << "Quin tipus de pista vols rebre? 1- Personatge | 2- Arma | 3- Habitació" << std::endl;
+			std::cin >> pistaType;
 			
 			switch (pistaType)
 			{
@@ -255,12 +277,6 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 		packet.clear();
 		break;
 
-		//Permet fer una demanda al servidor quan arribi a una sala
-	case GUESS:
-
-		packet.clear();
-		break;
-
 		//Rebre el supose d'un altre client
 	case SUPOSE:
 
@@ -273,6 +289,10 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 		//Rebre el acuse d'un altre client
 	case ACUSE:
 
+		// <PLAYER_ID>_<ACUSE>_<MURDERER>_<WEAPON>_<ROOM>
+
+		packet >> Murderer >> Weapon >> Room;
+		std::cout << "El jugador: " << "PlayerID" << " fa la següent acusació " << "l'assasí es: " << Murderer << " amb l'arma " << Weapon << "a la sala " << Room << std::endl;
 		packet.clear();
 		break;
 
@@ -288,14 +308,28 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 		packet.clear();
 		break;
 
-		//El client ensenya la carta escollida al client pertinent a traves del servidor.
-	case SHOW_CARDS:
-
-		packet.clear();
-		break;
-
 		//Llegir quin client esta ensenyant cartes a un altre
 	case SHOWING_CARDS:
+
+		// <PLAYER_ID_SENDER>_<PLAYER_ID_RECEIVER>
+
+		//Comprobar la ID i donar la info
+		int playerIDSender, playerIDReceiver;
+		/*PlayerInfo _playerS, _playerR;
+
+		for (int i = 0; i < currentPlayersJoined; i++)
+		{
+			
+			PlayerInfo _player;
+			if (_player.GetColor() == _playerS.GetColor)
+			{
+
+			}
+		}
+		_playerS = players[i];*/
+		packet >> playerIDSender >> playerIDReceiver;
+
+		std::cout << "El jugador : " << playerIDSender << " esta ensenyant una carta al jugador: " << playerIDReceiver << std::endl;
 
 		packet.clear();
 		break;

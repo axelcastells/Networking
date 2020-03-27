@@ -88,9 +88,6 @@ void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, i
 }
 //roomindex > 0 esta dins d'una sala.
 
-
-//Montar les funcions dins del protocol
-
 //Funcions del joc controlades pel servidor
 
 //Crear cartes
@@ -143,11 +140,10 @@ void repartirCartes()
 	}
 }
 
-// Enviar i Rebre Pista
-
+// Enviar Pista
 void enviarPistes()
 {
-
+	//<SHOW_CARDS>_<ORIGIN_PID>_<END_PID>_<N_MATCHING_CARDS>_<MATCHING_CARD_IDs...>
 }
 
 // Tirar daus
@@ -166,8 +162,9 @@ void tirarDaus()
 	}
 	
 	//enviar al client el resultat de la tirada
-
+	// Falta definir a quin client 
 	packet << YOUR_TURN << dado1 << dado2 << pista << random;
+	//TCP_SERVER.Send;
 }
 
 

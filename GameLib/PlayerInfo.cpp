@@ -36,24 +36,6 @@ void PlayerInfo::SetColor(PlayerInfo::Color _color) {
 	color = _color;
 }
 
-unsigned short PlayerInfo::GetIdColor()
-{
-	return static_cast<unsigned short>(color);
-}
-
-PlayerInfo::Color PlayerInfo::IdColorToColor(unsigned short _idColor) {
-	Color _color = Color::RED;
-
-	if (_idColor == 0) _color = Color::RED;
-	else if (_idColor == 1) _color = Color::GREEN;
-	else if (_idColor == 2) _color = Color::BLUE;
-	else if (_idColor == 3) _color = Color::YELLOW;
-	else if (_idColor == 4) _color = Color::PURPLE;
-	else if (_idColor == 5) _color = Color::ORANGE;
-
-	return _color;
-}
-
 sf::Vector2i PlayerInfo::GetPosition()
 {
 	return position;
