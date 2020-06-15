@@ -41,8 +41,12 @@ bool end_game = false;
 Graphics g;
 
 
+//TCP PROTOCOLS
+void TCPTestingProtocol(Network::TCP::Client &client, sf::Packet &packet)
+{
 
-void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
+}
+void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 	//Switch amb els diferents tipus de packets rebuts
 
@@ -336,8 +340,17 @@ void Protocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 	}
 }
+
+//UDP PROTOCOLS
+void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
+
+}
+
+
 int Run() {
-	TCP_CLIENT.Run(Protocol, "localhost", 50000);
+	//TCP_CLIENT.Run(TestingProtocol, "localhost", 50000);
+	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	return 0;
 }
 
 int main()

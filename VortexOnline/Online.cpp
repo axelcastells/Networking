@@ -541,6 +541,9 @@ void Network::UDP::Server::ManageSocketsThread()
 		ConnectionData dir;
 		// FIND USER ID
 		if (socket.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
+
+			//if(GetConnectionData())
+
 			FunctionProtocol(Instance(), dir, pack);
 			//if (!connectionsByData.count(dir)){//connectionsByData[dir] == 0) {
 			//	unsigned int uid = NEW_UID;
@@ -553,15 +556,18 @@ void Network::UDP::Server::ManageSocketsThread()
 			//	FunctionProtocol(Instance(), connectionsByData[dir], pack);
 			//}
 		}
-
+		
 	}
+	
 }
 
 void Network::UDP::Server::Ping()
 {
 	while (isRunning) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(pingerMillis));
-		SendBroadcast(pingPacket, pingerMillis);
+		sf::Packet newPacket;
+		newPacket << pingIdentifier;
+		SendBroadcast(newPacket, pingerMillis);
 	}
 }
 
@@ -583,10 +589,10 @@ void Network::UDP::Server::ManageDisconnections()
 	}
 }
 
-void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), sf::Packet _pingPacket, short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
+void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), unsigned int _pingIdentifier, short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
 	
 	disconnectPingCycles = _disconnectPingCycles;
-	pingPacket = _pingPacket;
+	pingIdentifier = _pingIdentifier;
 	criticalPacketMillis = criticTimer;
 	pingerMillis = pingTime;
 	port = _port;
@@ -629,12 +635,6 @@ UDP::Client& UDP::Client::Instance()
 	return instance;
 }
 
-void UDP::Client::Run(bool _debug)
-{
-	isRunning = true;
-	std::thread mainThread(&UDP::Client::ManageSocket, this);
-	mainThread.detach();
-}
 
 void Network::UDP::Client::Send(sf::Packet _packet)
 {
@@ -655,13 +655,18 @@ void UDP::Client::ManageSocket() {
 	}
 }
 
-void UDP::Client::Init(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned short _localPort)
+void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort)
 {
 	FunctionProtocol = funcProtocol;
 	serverIp = _ip;
 	serverPort = _serverPort;
 
-	socketToBootstrapServer.bind(_localPort);
+	
+	socketToBootstrapServer.bind(sf::IpAddress::getLocalAddress().toInteger());
+
+	isRunning = true;
+	std::thread mainThread(&UDP::Client::ManageSocket, this);
+	mainThread.detach();
 }
 
 #pragma endregion

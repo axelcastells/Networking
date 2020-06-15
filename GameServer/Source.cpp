@@ -19,7 +19,12 @@ sf::Packet packet;
 
 //Posar el enum amb les comandes a Playerinfo enlloc de protocol.h?
 
-void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) {
+//TCP Protocols
+void TCPTestingProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) 
+{
+
+}
+void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) {
 	
 	// Switch amb els diferents missatges a enviar o rebre dels clients?
 
@@ -86,6 +91,13 @@ void Protocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, i
 
 	}
 }
+
+//UDP Protocols
+void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet) 
+{
+	//server.
+}
+
 //roomindex > 0 esta dins d'una sala.
 
 //Funcions del joc controlades pel servidor
@@ -147,7 +159,6 @@ void enviarPistes()
 }
 
 // Tirar daus
-
 void tirarDaus()
 {
 	bool pista = false;
@@ -193,7 +204,8 @@ std::list<carta> definirResultat(std::list<carta> &baraja)
 int main()
 {
 	PlayerInfo playerInfo;
-	TCP_SERVER.Run(Protocol, 50000, 4, true);
+	//TCP_SERVER.Run(Protocol, 50000, 4, true);
+	//UDP_SERVER.Run(UDPTestingProtocol, )
 	bool startGame = false;
 	int maxPlayers;
 	int currentPlayersJoined;

@@ -16,7 +16,7 @@ namespace Network {
 		class Server {
 		public:
 			static Server &Instance();
-			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), sf::Packet _pingPacket, short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
+			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), unsigned int _pingIdentifier, short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
 			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData& dir);
@@ -37,7 +37,7 @@ namespace Network {
 
 			short port;
 			sf::UdpSocket socket;
-			sf::Packet pingPacket;
+			unsigned int pingIdentifier;
 
 			void ResendCriticalPackets();
 			std::map<unsigned int, ConnectionData*> connectionsById;
@@ -57,8 +57,7 @@ namespace Network {
 		class Client {
 		public:
 			static Client &Instance();
-			void Init(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned short _localPort);
-			void Run(bool _debug = false);
+			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort);
 
 			void Send(sf::Packet _packet);
 		private:
