@@ -9,6 +9,7 @@
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
+#define UDP_PING_ID 109619403579
 namespace Network {
 
 	namespace UDP {
@@ -16,7 +17,7 @@ namespace Network {
 		class Server {
 		public:
 			static Server &Instance();
-			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), unsigned int _pingIdentifier, short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
+			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
 			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData& dir);
@@ -35,12 +36,14 @@ namespace Network {
 			unsigned int pingerMillis;
 			unsigned int disconnectPingCycles;
 
+			sf::Mutex mutex;
+
 			short port;
 			sf::UdpSocket socket;
-			unsigned int pingIdentifier;
 
 			void ResendCriticalPackets();
 			std::map<unsigned int, ConnectionData*> connectionsById;
+			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
 			std::map<unsigned int, Proxy> criticalPackets;
 

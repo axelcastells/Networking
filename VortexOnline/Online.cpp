@@ -53,6 +53,8 @@ void TCP::Client::ManageSocket()
 	}
 }
 
+
+
 // -----------------------------------------
 // SERVER
 // -----------------------------------------
@@ -471,50 +473,65 @@ void Network::UDP::Server::Send(sf::Packet _pack, ConnectionData dir)
 
 void Network::UDP::Server::SendBroadcast(sf::Packet _pack, unsigned int _pingTime)
 {
+	mutex.lock();
 	for (auto i = connectionsById.begin(); i != connectionsById.end(); i++) {
 		socket.send(_pack, i->second->ip, i->second->port);
 		i->second->pingTime += _pingTime;
 	}
+	mutex.unlock();
 }
 
 void Network::UDP::Server::AddConnection(unsigned int newUid, ConnectionData dir)
 {
+	mutex.lock();
 	connectionsById[newUid] = new ConnectionData(dir);
+	mutex.unlock();
 }
 
 // Returns through "proxy" arg the user proxy assigned to the given user id. You can use the returned boolean to check if there was a coincidence and therefore "proxy" has been written through reference.
 bool Network::UDP::Server::GetConnectionData(unsigned int _userId, ConnectionData& dir)
 {
+	mutex.lock();
 	if (connectionsById.count(_userId)) {
 		dir = *connectionsById[_userId];
+		mutex.unlock();
 		return true;
 	}
 	else {
+		mutex.unlock();
 		return false;
 	}
 }
-bool Network::UDP::Server::GetConnectionId(const ConnectionData& proxy, unsigned int& _id)
+bool Network::UDP::Server::GetConnectionId(const ConnectionData& proxy, unsigned int& id)
 {
+	mutex.lock();
 	for (auto it = connectionsById.begin(); it != connectionsById.end(); it++) {
 		if (*it->second == proxy) {
-			_id = it->first;
+			id = it->first;
+
+			mutex.unlock();
 			return true;
 		}
 	}
+	mutex.unlock();
 	return false;
 }
 
 unsigned int Network::UDP::Server::AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack)
 {
 	unsigned int uid = NEW_UID;
+	mutex.lock();
 	criticalPackets[uid] = Proxy(_pack, _playerUid);
+	mutex.unlock();
 	return uid;
 }
 
 void Network::UDP::Server::ResendCriticalPackets()
 {
 	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
+		mutex.lock();
 		socket.send(i->second.packet, connectionsById[i->second.playerUid]->ip, connectionsById[i->second.playerUid]->port);
+		mutex.unlock();
 	}
 }
 
@@ -525,9 +542,11 @@ void Network::UDP::Server::Debug()
 		//system("cls");
 		std::cout << "Connections (" << connectionsById.size() << ")" << std::endl;
 
+		mutex.lock();
 		for (auto i = connectionsById.begin(); i != connectionsById.end(); i++) {
 			std::cout << "	User ID: " << i->first << " IP: " << i->second->ip << ":" << i->second->port << " Ping: " << i->second->pingTime << std::endl;
 		}
+		mutex.unlock();
 
 		std::cout << "|---|" << std::endl;
 	}
@@ -541,15 +560,34 @@ void Network::UDP::Server::ManageSocketsThread()
 		ConnectionData dir;
 		// FIND USER ID
 		if (socket.receive(pack, dir.ip, dir.port) == sf::Socket::Status::Done) {
+			unsigned int newUid;
+			if (!GetConnectionId(dir, newUid)) {
+				newUid = NEW_UID;
+				AddConnection(newUid, dir);
+			}
+			else {
+				sf::Packet potentialPingPacket = pack;
+				int pingId;
+				potentialPingPacket >> pingId;
 
-			//if(GetConnectionData())
+				//If true, this is a ping packet!
+				if (pingId == (int)UDP_PING_ID) {
+					std::cout << "Got PONG from client!" << std::endl;
+					ConnectionData proxy;
+					GetConnectionData(newUid, proxy);
+					proxy.pingTime = 0;
+				}
+				else {
+					FunctionProtocol(Instance(), dir, pack);
+				}
+			}
 
-			FunctionProtocol(Instance(), dir, pack);
+
+
 			//if (!connectionsByData.count(dir)){//connectionsByData[dir] == 0) {
 			//	unsigned int uid = NEW_UID;
 			//	AddConnection(uid, dir);
 			//	FunctionProtocol(Instance(), uid, pack);
-
 			//}
 			//else {
 			//	unsigned int uid = GetConnectionId(dir);
@@ -566,7 +604,7 @@ void Network::UDP::Server::Ping()
 	while (isRunning) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(pingerMillis));
 		sf::Packet newPacket;
-		newPacket << pingIdentifier;
+		newPacket << (int)UDP_PING_ID;
 		SendBroadcast(newPacket, pingerMillis);
 	}
 }
@@ -589,10 +627,9 @@ void Network::UDP::Server::ManageDisconnections()
 	}
 }
 
-void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), unsigned int _pingIdentifier, short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
+void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
 	
 	disconnectPingCycles = _disconnectPingCycles;
-	pingIdentifier = _pingIdentifier;
 	criticalPacketMillis = criticTimer;
 	pingerMillis = pingTime;
 	port = _port;
@@ -645,13 +682,34 @@ UDP::Client::Client() {
 	isRunning = false;
 }
 
+void UDP::Client::Pong()
+{
+	sf::Packet pongPacket;
+	pongPacket << (int)UDP_PING_ID;
+	Send(pongPacket);
+}
+
 void UDP::Client::ManageSocket() {
 	while (isRunning) {
 		sf::Packet packet;
 		ConnectionData data;
-		socketToBootstrapServer.receive(packet, data.ip, data.port);
+		if (socketToBootstrapServer.receive(packet, data.ip, data.port) == sf::Socket::Status::Done) 
+		{
+			int pingId;
+			sf::Packet potentialPingPacket;
+			potentialPingPacket = packet;
+			potentialPingPacket >> pingId;
 
-		FunctionProtocol(Instance(), packet);
+			//If true, this is a ping packet!
+			if (pingId == (int)UDP_PING_ID) {
+				std::cout << "Got PING from server!" << std::endl;
+				Pong();
+			}
+			else {
+				FunctionProtocol(Instance(), packet);
+			}
+			
+		}
 	}
 }
 

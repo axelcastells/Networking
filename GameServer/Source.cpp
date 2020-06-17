@@ -204,8 +204,8 @@ std::list<carta> definirResultat(std::list<carta> &baraja)
 int main()
 {
 	PlayerInfo playerInfo;
-	//TCP_SERVER.Run(Protocol, 50000, 4, true);
-	//UDP_SERVER.Run(UDPTestingProtocol, )
+	//TCP_SERVER.Run(TCPTestingProtocol, 50000, 4);
+	UDP_SERVER.Run(UDPTestingProtocol, 50000, 1000, 1000, 10);
 	bool startGame = false;
 	int maxPlayers;
 	int currentPlayersJoined;

@@ -348,8 +348,11 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
 
 int Run() {
-	//TCP_CLIENT.Run(TestingProtocol, "localhost", 50000);
+	//TCP_CLIENT.Run(TCPTestingProtocol, "localhost", 50000);
 	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	sf::Packet connectPacket;
+	connectPacket << 111;
+	UDP_CLIENT.Send(connectPacket);
 	return 0;
 }
 
