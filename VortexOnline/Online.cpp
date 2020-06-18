@@ -489,11 +489,11 @@ void Network::UDP::Server::AddConnection(unsigned int newUid, ConnectionData dir
 }
 
 // Returns through "proxy" arg the user proxy assigned to the given user id. You can use the returned boolean to check if there was a coincidence and therefore "proxy" has been written through reference.
-bool Network::UDP::Server::GetConnectionData(unsigned int _userId, ConnectionData& dir)
+bool Network::UDP::Server::GetConnectionData(unsigned int _userId, ConnectionData** dir)
 {
 	mutex.lock();
 	if (connectionsById.count(_userId)) {
-		dir = *connectionsById[_userId];
+		*dir = connectionsById[_userId];
 		mutex.unlock();
 		return true;
 	}
@@ -573,9 +573,9 @@ void Network::UDP::Server::ManageSocketsThread()
 				//If true, this is a ping packet!
 				if (pingId == (int)UDP_PING_ID) {
 					std::cout << "Got PONG from client!" << std::endl;
-					ConnectionData proxy;
-					GetConnectionData(newUid, proxy);
-					proxy.pingTime = 0;
+					ConnectionData* proxy = nullptr;
+					GetConnectionData(newUid, &proxy);
+					proxy->pingTime = 0;
 				}
 				else {
 					FunctionProtocol(Instance(), dir, pack);

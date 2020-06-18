@@ -205,7 +205,7 @@ int main()
 {
 	PlayerInfo playerInfo;
 	//TCP_SERVER.Run(TCPTestingProtocol, 50000, 4);
-	UDP_SERVER.Run(UDPTestingProtocol, 50000, 1000, 1000, 10);
+	UDP_SERVER.Run(UDPTestingProtocol, 50000);
 	bool startGame = false;
 	int maxPlayers;
 	int currentPlayersJoined;

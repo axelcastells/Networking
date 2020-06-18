@@ -20,7 +20,7 @@ namespace Network {
 			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
 			void Shutdown();
-			bool GetConnectionData(unsigned int _userId, ConnectionData& dir);
+			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
 			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
 
