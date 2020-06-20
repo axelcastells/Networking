@@ -7,10 +7,12 @@ struct ConnectionData {
 		ip = data.ip;
 		port = data.port;
 		pingTime = data.pingTime;
+		salt = 0;
 	}
 	sf::IpAddress ip;
 	unsigned short port;
 	unsigned int pingTime;
+	unsigned int salt;
 
 
 	ConnectionData& operator *() {

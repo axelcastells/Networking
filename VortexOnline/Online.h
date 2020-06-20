@@ -9,7 +9,12 @@
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
-#define UDP_PING_ID 109619403579
+enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER};
+//#define UDP_PING_ID 109619403579
+//#define UDP_HELLO_MESSAGE_ID 0
+//#define UDP_CHALLENGE_ID 90620269561985632
+//#define UDP_CHALLENGE_QUESTION 16401976109743
+//#define UDP_CHALLENGE_ANSWER 937937698
 
 namespace Network {
 
@@ -25,6 +30,7 @@ namespace Network {
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
 			
 			void RemoveCriticalPacket(unsigned int _criticalPacketId);
+
 			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
 			void AddConnection(unsigned int newUid, ConnectionData dir);
 
@@ -38,16 +44,21 @@ namespace Network {
 			unsigned int pingerMillis;
 			unsigned int disconnectPingCycles;
 
+			unsigned int serverSalt;
 			sf::Mutex mutex;
 
 			short port;
 			sf::UdpSocket socket;
 
+
+			void RemoveNonMemberCriticalPacket(unsigned int _nonMemberCriticalPacketId);
+			unsigned int AddCriticalPacket(ConnectionData dir, sf::Packet _pack);
 			void SendCriticalPackets();
 			std::map<unsigned int, ConnectionData*> connectionsById;
 			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
 			std::map<unsigned int, Proxy> criticalPackets;
+			std::map<unsigned int, std::pair<ConnectionData, sf::Packet>> nonMemberCriticalPackets;
 
 			void Debug();
 
@@ -76,7 +87,11 @@ namespace Network {
 			void ManageSocket();
 			void Pong();
 
+			unsigned int saltChecksum;
+			unsigned int clientSalt;
 			unsigned int criticalPacketMillis;
+
+			int helloPacketId;
 
 			void SendCriticalPackets();
 			void CriticalPacketsManager();
