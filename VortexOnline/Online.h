@@ -64,6 +64,7 @@ namespace Network {
 			static Client &Instance();
 			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis = 1000);
 
+			// Add Critical Packet
 			unsigned int AddCriticalPacket(sf::Packet _pack);
 			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 
@@ -98,7 +99,7 @@ namespace Network {
 			void Run(void(*funcProtocol)(Peer &_peer, sf::Packet& packet), std::string _ip, short _port, bool debug = false);
 
 			void Send(int peerIndex, sf::Packet pack);
-
+			void BroadcastSend(sf::Packet pack);
 
 		private:
 			Peer();

@@ -347,17 +347,27 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 }
 
 void PeerProtocol(Network::TCP::Peer &client, sf::Packet &packet) {
-
+	std::string message;
+	packet >> message;
+	std::cout << message << std::endl;
 }
 
 
 int Run() {
-	//TCP_PEER.Run(PeerProtocol, "localhost", 50000, true);
+	TCP_PEER.Run(PeerProtocol, "localhost", 50001);
 	//TCP_CLIENT.Run(TCPTestingProtocol, "localhost", 50000);
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
 	sf::Packet connectPacket;
 	connectPacket << 111;
-	UDP_CLIENT.Send(connectPacket);
+
+	while (1) {
+		std::string message;
+		std::cin >> message;
+		sf::Packet packet;
+		packet << message;
+		TCP_PEER.BroadcastSend(packet);
+	}
+	//UDP_CLIENT.Send(connectPacket);
 	return 0;
 }
 

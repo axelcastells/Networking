@@ -282,6 +282,13 @@ void TCP::Peer::Send(int peerIndex, sf::Packet pack)
 	sockets[peerIndex]->send(pack);
 }
 
+void TCP::Peer::BroadcastSend(sf::Packet pack) {
+	for (int i = 0; i < sockets.size(); i++)
+	{
+		sockets[i]->send(pack);
+	}
+}
+
 void TCP::Peer::ManagePeers()
 {
 	while (1) {
@@ -312,7 +319,7 @@ void TCP::Peer::ManagePeers()
 					std::cout << directions.size() << std::endl;
 
 					socketToBootstrapServer.disconnect();
-					//listener.setBlocking(false);
+
 					if (listener.listen(localPort) == sf::Socket::Status::Done) {
 						socketSelector.add(listener);
 						std::cout << "Me quedo en el " << localPort << std::endl;
@@ -399,15 +406,13 @@ void TCP::BootstrapServer::Run(int _maxUsers, short _port)
 	}
 
 	std::thread manageSocketThread(&BootstrapServer::ManageSockets, this);
-	//std::thread debugger(&Server::Debugger, this);
 	manageSocketThread.detach();
-	//debugger.detach();
 }
 
 void TCP::BootstrapServer::ManageSockets()
 {
-	bool runing = true;
-	while (runing) {
+	bool isRunning = true;
+	while (isRunning) {
 		if (socketSelector.wait()) {
 			if (socketSelector.isReady(listener) && directions.size() < maxUsers) {
 				// The listener is ready: there is a pending connection
