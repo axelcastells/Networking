@@ -526,7 +526,11 @@ unsigned int Network::UDP::Server::AddCriticalPacket(unsigned int _playerUid, sf
 	return uid;
 }
 
-void Network::UDP::Server::ResendCriticalPackets()
+void Network::UDP::Server::RemoveCriticalPacket(unsigned int _criticalPacketId) {
+	criticalPackets.erase(_criticalPacketId);
+}
+
+void Network::UDP::Server::SendCriticalPackets()
 {
 	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
 		mutex.lock();
@@ -581,22 +585,8 @@ void Network::UDP::Server::ManageSocketsThread()
 					FunctionProtocol(Instance(), dir, pack);
 				}
 			}
-
-
-
-			//if (!connectionsByData.count(dir)){//connectionsByData[dir] == 0) {
-			//	unsigned int uid = NEW_UID;
-			//	AddConnection(uid, dir);
-			//	FunctionProtocol(Instance(), uid, pack);
-			//}
-			//else {
-			//	unsigned int uid = GetConnectionId(dir);
-			//	FunctionProtocol(Instance(), connectionsByData[dir], pack);
-			//}
-		}
-		
-	}
-	
+		}		
+	}	
 }
 
 void Network::UDP::Server::Ping()
@@ -643,7 +633,7 @@ void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf
 	std::thread runServerThread(&Server::ManageSocketsThread, this);
 	std::thread manageDisconnect(&Server::ManageDisconnections, this);
 	std::thread managePingPong(&Server::Ping, this);
-	std::thread manageCriticalPackets(&Server::CriticPacketManager, this);
+	std::thread manageCriticalPackets(&Server::CriticalPacketsManager, this);
 
 	runServerThread.detach();
 	manageDisconnect.detach();
@@ -658,11 +648,11 @@ void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf
 	while (isRunning);
 }
 
-void UDP::Server::CriticPacketManager()
+void UDP::Server::CriticalPacketsManager()
 {
 	while (isRunning) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(criticalPacketMillis));
-		ResendCriticalPackets();
+		SendCriticalPackets();
 	}
 }
 
@@ -689,6 +679,31 @@ void UDP::Client::Pong()
 	Send(pongPacket);
 }
 
+unsigned int Network::UDP::Client::AddCriticalPacket(sf::Packet _pack)
+{
+	unsigned int uid = NEW_UID;
+	criticalPackets[uid] = _pack;
+	return uid;
+}
+
+void Network::UDP::Client::RemoveCriticalPacket(unsigned int _criticalPacketId) {
+	criticalPackets.erase(_criticalPacketId);
+}
+
+void UDP::Client::SendCriticalPackets() {
+	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
+		socketToBootstrapServer.send(i->second, serverIp, serverPort);
+	}
+}
+
+void UDP::Client::CriticalPacketsManager()
+{
+	while (isRunning) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(criticalPacketMillis));
+		SendCriticalPackets();
+	}
+}
+
 void UDP::Client::ManageSocket() {
 	while (isRunning) {
 		sf::Packet packet;
@@ -713,8 +728,9 @@ void UDP::Client::ManageSocket() {
 	}
 }
 
-void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort)
+void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis)
 {
+	criticalPacketMillis = _criticalPacketMillis;
 	FunctionProtocol = funcProtocol;
 	serverIp = _ip;
 	serverPort = _serverPort;
@@ -724,7 +740,9 @@ void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf
 
 	isRunning = true;
 	std::thread mainThread(&UDP::Client::ManageSocket, this);
+	std::thread criticalPacketsThread(&UDP::Client::CriticalPacketsManager, this);
 	mainThread.detach();
+	criticalPacketsThread.detach();
 }
 
 #pragma endregion

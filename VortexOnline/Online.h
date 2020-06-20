@@ -10,6 +10,7 @@
 #include "Proxy.h"
 
 #define UDP_PING_ID 109619403579
+
 namespace Network {
 
 	namespace UDP {
@@ -22,8 +23,9 @@ namespace Network {
 			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
+			
+			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
-
 			void AddConnection(unsigned int newUid, ConnectionData dir);
 
 			void PongReceived(unsigned int _userId);
@@ -41,7 +43,7 @@ namespace Network {
 			short port;
 			sf::UdpSocket socket;
 
-			void ResendCriticalPackets();
+			void SendCriticalPackets();
 			std::map<unsigned int, ConnectionData*> connectionsById;
 			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
@@ -52,7 +54,7 @@ namespace Network {
 			void ManageSocketsThread();
 			void Ping();
 			void ManageDisconnections();
-			void CriticPacketManager();
+			void CriticalPacketsManager();
 
 			void(*FunctionProtocol)(Server &_server, ConnectionData dir, sf::Packet& packet);
 		};
@@ -60,7 +62,11 @@ namespace Network {
 		class Client {
 		public:
 			static Client &Instance();
-			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort);
+			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis = 1000);
+
+			unsigned int AddCriticalPacket(sf::Packet _pack);
+			void RemoveCriticalPacket(unsigned int _criticalPacketId);
+
 
 			void Send(sf::Packet _packet);
 		private:
@@ -68,8 +74,17 @@ namespace Network {
 			bool isRunning;
 			void ManageSocket();
 			void Pong();
+
+			unsigned int criticalPacketMillis;
+
+			void SendCriticalPackets();
+			void CriticalPacketsManager();
+
 			sf::UdpSocket socketToBootstrapServer;
 			sf::IpAddress serverIp;
+
+			std::map<unsigned int, sf::Packet> criticalPackets;
+
 			unsigned int serverPort;
 			void(*FunctionProtocol)(Client &_client, sf::Packet& packet);
 		};

@@ -346,8 +346,13 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
 }
 
+void PeerProtocol(Network::TCP::Peer &client, sf::Packet &packet) {
+
+}
+
 
 int Run() {
+	//TCP_PEER.Run(PeerProtocol, "localhost", 50000, true);
 	//TCP_CLIENT.Run(TCPTestingProtocol, "localhost", 50000);
 	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
 	sf::Packet connectPacket;
