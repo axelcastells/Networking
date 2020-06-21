@@ -9,6 +9,8 @@
 #include "Graphics.h"
 #include "VortexOnline.h"
 #include "Protocol.h"
+#include <AssetManager.h>
+
 
 //Client local setup
 PlayerInfo playerInfo;
@@ -357,6 +359,140 @@ int Run() {
 	return 0;
 }
 
+std::string folder = "images/";
+
+void AddSprite(std::string name, sf::Vector2f pos, sf::Vector2f scale)
+{
+
+	sf::Sprite sprite = sf::Sprite(AssetManager::GetTexture(folder + name));
+	sprite.setPosition(pos);
+	sprite.setScale(scale);
+	AssetManager::PushSprite(sprite);
+}
+
+void Cluedo() 
+{
+	sf::RenderWindow window(sf::VideoMode(800, 1000), "Game");
+	window.setFramerateLimit(60);
+
+	AssetManager manager;
+
+	//Taulell(manager);
+
+	sf::Vector2f taulell[9];
+
+	taulell[0] = sf::Vector2f(0, 0);
+	taulell[1] = sf::Vector2f(260, 0);
+	taulell[2] = sf::Vector2f(530, 0);
+	taulell[3] = sf::Vector2f(0, 260);
+	taulell[4] = sf::Vector2f(0, 0);
+
+	///SPRITES TAULLEL
+	sf::Vector2f scaleRooms = sf::Vector2f(0.65f, 0.65f);
+	///
+	AddSprite("SALON.png", sf::Vector2f(0, 0), scaleRooms);
+	AddSprite("CONSERVATORIO.png", sf::Vector2f(260, 0), scaleRooms);
+	AddSprite("SALADEBAILE.png", sf::Vector2f(530, 0), scaleRooms);
+	///
+	AddSprite("COMEDOR.png", sf::Vector2f(0, 260), scaleRooms);
+	AddSprite("COCINA.png", sf::Vector2f(260, 260), scaleRooms);
+	AddSprite("BIBLIOTECA.png", sf::Vector2f(530, 260), scaleRooms);
+	///
+	AddSprite("SALABILLAR.png", sf::Vector2f(0, 520), scaleRooms);
+	AddSprite("ESTUDIO.png", sf::Vector2f(260, 520), scaleRooms);
+	AddSprite("SALA.png", sf::Vector2f(530, 520), scaleRooms);
+	///
+
+	std::vector<std::string> names = AssetManager::GetNames();
+	for (int i = 0; i < names.size(); i++)
+	{
+		std::cout << names[i] << std::endl;
+	}
+	//Init(); //Despues de la creacion de la ventana y propiedades. 
+
+	///PLAYER COMENTADO
+	//PlayerCLUEDO *player = new PlayerCLUEDO();
+	//player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	//player->SetPos(sf::Vector2f(10, 50));
+
+
+	sf::Clock clock;
+	sf::Time elapsedTime;
+
+	while (window.isOpen())
+	{
+		//Time. 
+		sf::Time deltaTime = clock.restart();
+		elapsedTime += deltaTime;
+
+		//Make the loop game. 
+		//1. Input.  
+		sf::Event event; // variable ref. 
+		while (window.pollEvent(event)) 
+		{
+
+			switch (event.type) {
+			case sf::Event::EventType::Closed:
+				window.close();
+				break;
+
+			case sf::Event::KeyPressed:
+				/*if (event.key.code == sf::Keyboard::Up)
+				{
+					sf::Vector2f playerPos = player->GetPos();
+					player->SetPos(
+						sf::Vector2f(playerPos.x, playerPos.y - 260)
+					);
+				}
+
+				if (event.key.code == sf::Keyboard::Down)
+				{
+					sf::Vector2f playerPos = player->GetPos();
+					player->SetPos(
+						sf::Vector2f(playerPos.x, playerPos.y + 260)
+					);
+				}
+
+				if (event.key.code == sf::Keyboard::Left)
+				{
+					sf::Vector2f playerPos = player->GetPos();
+					player->SetPos(
+						sf::Vector2f(playerPos.x - 260, playerPos.y)
+					);
+				}
+
+				if (event.key.code == sf::Keyboard::Right)
+				{
+					sf::Vector2f playerPos = player->GetPos();
+					player->SetPos(
+						sf::Vector2f(playerPos.x + 260, playerPos.y)
+					);
+				}*/
+
+				break;
+			}
+		}
+		//2. Update.
+		///Constraints 
+		//sf::Vector2f playerPos = player->GetPos();
+		//if (playerPos.y < 0)
+		//	player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
+		//if (playerPos.y > 520)
+		//	player->SetPos(sf::Vector2f(playerPos.x, 520));
+		//if (playerPos.x < 0)
+		//	player->SetPos(sf::Vector2f(0.0f, playerPos.y));
+		//if (playerPos.x > 530)
+		//	player->SetPos(sf::Vector2f(530, playerPos.y));
+
+		//3. Clear. 
+		window.clear(sf::Color::Black);
+		//4. Draw or Render: Dibjar objetos creados. 
+		AssetManager::DrawAllSprites(&window);
+		//player->DrawPlayer(&window);
+		window.display(); // Ultimo metodo a llamar. 
+	}
+}
+
 int main()
 {
 	// INIT PLAYER
@@ -375,14 +511,18 @@ int main()
 	std::thread clientThread(Run);
 	clientThread.join();
 
+	///PARTIDA
+	Cluedo();
+
+
 	//Partida
-	while (!startGame)
-	{
-		//Esperant jugadors a la partida
+	//while (!startGame)
+	//{
+	//	//Esperant jugadors a la partida
 
-	};
-
-	g.DrawDungeon();
+	//};
+	
+	//g.DrawDungeon();
 
 
 	return 0;
