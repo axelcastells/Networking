@@ -348,18 +348,17 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 }
 
  
-int Run() {
-	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-	sf::Packet connectPacket;
-	connectPacket << 111;
-	TCP_CLIENT.Send(connectPacket);
-	return 0;
-}
+//int Run() {
+//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+//	sf::Packet connectPacket;
+//	connectPacket << 111;
+//	//TCP_CLIENT.Send(connectPacket);
+//	return 0;
+//}
 
 int main()
 {
-	
 	// INIT PLAYER
 	std::string nickname;
 	std::cout << "Enter your nickname: " << std::endl;
@@ -373,8 +372,7 @@ int main()
 	
 
 	//Connect a Servidor
-	std::thread clientThread(Run);
-	clientThread.join();
+	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
 
 	//Partida
 	while (!startGame)

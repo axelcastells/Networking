@@ -96,6 +96,10 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet) 
 {
 	//server.
+	//unsigned int id;
+	//if (server.GetConnectionId(dir, id)) {
+	//	server.RemoveCriticalPacket()
+	//}
 }
 
 //roomindex > 0 esta dins d'una sala.
@@ -204,12 +208,12 @@ std::list<carta> definirResultat(std::list<carta> &baraja)
 int main()
 {
 	//PlayerInfo playerInfo;
-	TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
-	//UDP_SERVER.Run(UDPTestingProtocol, 50000);
+	//TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
+	UDP_SERVER.Run(UDPTestingProtocol, 50000);
 	bool startGame = false;
 	int currentPlayersJoined;
 	//Partida
-	TCP_SERVER.CreateRoom(3);
+	//TCP_SERVER.CreateRoom(3);
 	while (!startGame)
 	{
 		//Esperant jugadors a la partida
