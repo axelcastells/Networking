@@ -674,8 +674,19 @@ void Network::UDP::Server::ManageSocketsThread()
 
 					if ((clientSalt & serverSalt) == data->salt)
 					{
-						pack << potentialSystemMessageId << potentialSystemPacket;
-						FunctionProtocol(Instance(), dir, pack);
+						//pack << potentialSystemMessageId << potentialSystemPacket;
+
+						pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						sf::Packet newPacket;
+						newPacket << potentialSystemMessageId;
+
+						auto nextMessage = 0;
+						while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+							pack >> nextMessage;
+							newPacket << nextMessage;
+						}
+
+						FunctionProtocol(Instance(), dir, newPacket);
 					}
 				}
 			}
@@ -690,7 +701,6 @@ void Network::UDP::Server::Ping()
 		sf::Packet newPacket;
 		newPacket << (int)UDP_SYSTEM_MESSAGE::PING;
 		SendBroadcast(newPacket, pingerMillis);
-		std::cout << "Sending ping to all..." << std::endl;
 	}
 }
 
@@ -864,8 +874,18 @@ void UDP::Client::ManageSocket() {
 				//TODO: CONFIRM IT'S A REAL CLIENT BEFORE LAUNCHING FUNCTION PROTOCOL
 				potentialSystemPacket >> serverSalt;
 				if ((serverSalt & clientSalt) == saltChecksum) {
-					packet << potentialSystemId << potentialSystemPacket;
-					FunctionProtocol(Instance(), packet);
+					//packet << potentialSystemId << potentialSystemPacket;
+					packet << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+					sf::Packet newPacket;
+					newPacket << potentialSystemId;
+
+					auto nextMessage = 0;
+					while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+						packet >> nextMessage;
+						newPacket << nextMessage;
+					}
+
+					FunctionProtocol(Instance(), newPacket);
 				}
 			}
 			
