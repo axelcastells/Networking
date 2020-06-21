@@ -3,18 +3,21 @@
 #include <iostream>
 #include <mutex>
 #include <vector>
+#include <queue>
 
 #include "ServerRoom.h"
 #include "Direction.h"
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
-enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER, END_OF_PACKET};
+enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER, END_OF_PACKET, ACCUM_COMMANDS_ID, END_OF_COMMAND, ACK, ACK_COMMAND, NO_ACK_COMMAND};
 //#define UDP_PING_ID 109619403579
 //#define UDP_HELLO_MESSAGE_ID 0
 //#define UDP_CHALLENGE_ID 90620269561985632
 //#define UDP_CHALLENGE_QUESTION 16401976109743
 //#define UDP_CHALLENGE_ANSWER 937937698
+
+#define ACCUMULATED_COMANDS_MILLIS (int)1000
 
 namespace Network {
 
@@ -23,7 +26,7 @@ namespace Network {
 		class Server {
 		public:
 			static Server &Instance();
-			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
+			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), bool(*simulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
 			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
@@ -58,28 +61,36 @@ namespace Network {
 			std::map<unsigned int, ConnectionData*> connectionsById;
 			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
+
+
+			std::map<unsigned int, std::queue<sf::Packet>> accumulatedCommands;
 			std::map<unsigned int, Proxy> criticalPackets;
 			std::map<unsigned int, std::pair<ConnectionData, sf::Packet>> nonMemberCriticalPackets;
 
 			void Debug();
 
+			void ManageAccumulatedCommands();
 			void ManageSocketsThread();
 			void Ping();
 			void ManageDisconnections();
 			void CriticalPacketsManager();
 
 			void(*FunctionProtocol)(Server &_server, ConnectionData dir, sf::Packet& packet);
+			//If simulation isn't valid (return false) correctionPacket gets written by reference.
+			bool(*SimulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket);
 		};
 
 		class Client {
 		public:
 			static Client &Instance();
-			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis = 1000);
+			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis = 1000, unsigned int _accumulatedCommandsMillis = 1000);
 
 			// Add Critical Packet
 			unsigned int AddCriticalPacket(sf::Packet _pack);
 			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 
+			void ValidateCommand(unsigned int _commandId);
+			void AddCommand(sf::Packet _commandPacket);
 
 			void Send(sf::Packet _packet);
 		private:
@@ -91,7 +102,10 @@ namespace Network {
 			unsigned int saltChecksum;
 			unsigned int clientSalt;
 			unsigned int criticalPacketMillis;
+			unsigned int accumulatedCommandMillis;
 
+			void ManageAccumulatedCommands();
+			void SendAccumulatedCommands();
 			
 			unsigned int helloPacketId;
 
@@ -101,6 +115,8 @@ namespace Network {
 			sf::UdpSocket socketToBootstrapServer;
 			sf::IpAddress serverIp;
 
+			std::map<unsigned int, sf::Packet> commandsWaitingForAck;
+			std::map<unsigned int, sf::Packet> accumulatedCommands;
 			std::map<unsigned int, sf::Packet> criticalPackets;
 
 			unsigned int serverPort;

@@ -346,7 +346,9 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 //UDP PROTOCOLS
 void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
-
+	sf::Packet commandPacket;
+	commandPacket << 999;
+	//UDP_CLIENT.AddCommand(commandPacket);
 }
 
  
@@ -509,6 +511,14 @@ int main()
 
 	//Connect a Servidor
 	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+
+	sf::Packet commandPacket;
+	commandPacket << 75;
+	//std::cout << commandPacket << std::endl;
+	//while (true) {
+
+	//UDP_CLIENT.AddCommand(commandPacket);
+	//}
 
 	///PARTIDA
 	Cluedo();
