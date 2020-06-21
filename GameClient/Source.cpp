@@ -58,7 +58,8 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	switch (head)
 	{
 	case START:
-
+		startGame = true;
+		/*
 		// Missatge rebut per començar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
 							//_<GIVENCARDS>_<IDSCARTES>
@@ -190,7 +191,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			}
 
 		}
-
+		*/
 		packet.clear();
 		break;
 
@@ -346,26 +347,26 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
 }
 
-
+ 
 int Run() {
-	//TCP_CLIENT.Run(TCPTestingProtocol, "localhost", 50000);
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
 	sf::Packet connectPacket;
 	connectPacket << 111;
-	UDP_CLIENT.Send(connectPacket);
+	TCP_CLIENT.Send(connectPacket);
 	return 0;
 }
 
 int main()
 {
-	/*
+	
 	// INIT PLAYER
 	std::string nickname;
 	std::cout << "Enter your nickname: " << std::endl;
 	std::cin >> nickname;
 	//loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
-	*/
+	
 	//TEST AQUI
 	/*hand.push_back(carta(CHARACTER, "Mora", 6));
 	std::cout << "Carta 1: " << hand[0].Cardname << std::endl;*/
@@ -379,7 +380,6 @@ int main()
 	while (!startGame)
 	{
 		//Esperant jugadors a la partida
-
 
 	};
 

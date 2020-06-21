@@ -86,9 +86,10 @@ TCP::Server &TCP::Server::Instance()
 	return instance;
 }
 
-void TCP::Server::Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, int roomIndex, int socketIndex), short _port, int _maxRooms, bool debug)
+void TCP::Server::Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, int roomIndex, int socketIndex), short _port, int _maxRooms, int _maxPlayers, bool debug)
 {
 	maxServerRooms = _maxRooms;
+	maxPlayersRoom = _maxPlayers;
 	connectPort = _port;
 	FunctionProtocol = funcProtocol;
 
@@ -104,9 +105,6 @@ void TCP::Server::Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, i
 
 	}
 }
-
-
-
 
 
 int TCP::Server::CreateRoom(int maxClients) {
@@ -189,8 +187,8 @@ void TCP::Server::ManageSockets()
 					std::cout << "Error al recoger conexión nueva\n";
 					delete client;
 				}
-
 			}
+
 			else
 			{
 				for (int i = 0; i < unassignedSockets.size(); i++) {
@@ -204,7 +202,6 @@ void TCP::Server::ManageSockets()
 						{
 							unassignedSockets.erase(unassignedSockets.begin() + i);
 						}
-
 					}
 				}
 
@@ -223,7 +220,33 @@ void TCP::Server::ManageSockets()
 						}
 					}
 				}
+			}
+		}
+		//Add unassigned clients to the game rooms
+		for (int i = 0; i < unassignedSockets.size(); i++) {
+			if (RoomsCount() == 0) {
+				CreateRoom(maxPlayersRoom);
+				JoinRoom(i, 0);
+			}
+			else {
+				for (int j = 0; j < RoomsCount(); j++) {
+					if (GetRoom(j).GetSocketsCount() < GetRoom(j).MaxClients()) {
+						JoinRoom(i, j);
+						if (GetRoom(j).GetSocketsCount() == GetRoom(j).MaxClients()) {
+							std::cout << "Room " << j << " will start the game." << std::endl;
+							sf::Packet startPacket;
+							startPacket << 0;
+							BroadcastSend(j, startPacket);
+						}
+					}
+					/*else if (RoomsCount() < maxServerRooms) {
+						CreateRoom(maxPlayersRoom);
+						JoinRoom(i, j+1);
+					}
+					else {
 
+					}*/
+				}
 			}
 		}
 	}

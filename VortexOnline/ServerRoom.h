@@ -17,7 +17,6 @@ public:
 		return (T)parameters[tag];
 	}
 
-
 	ServerRoom(int _maxClients);
 	void AddSocket(sf::TcpSocket *socketToBootstrapServer);
 	sf::TcpSocket &PopSocket(int index);

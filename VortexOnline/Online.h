@@ -141,7 +141,7 @@ namespace Network {
 		public:
 			static Server &Instance();
 
-			void Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, int roomIndex, int socketIndex), short _port, int _maxRooms = 1, bool debug = false);
+			void Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, int roomIndex, int socketIndex), short _port, int _maxRooms = 1, int _maxPlayers = 3, bool debug = false);
 
 			// Returns new room index
 			int CreateRoom(int maxClients);
@@ -165,6 +165,7 @@ namespace Network {
 			sf::TcpSocket &LastSocket();
 			int LastSocketIndex();
 
+			int maxPlayersRoom;
 			int maxServerRooms;
 			short connectPort;
 
