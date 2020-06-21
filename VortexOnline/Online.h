@@ -9,7 +9,13 @@
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
-#define UDP_PING_ID 109619403579
+enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER};
+//#define UDP_PING_ID 109619403579
+//#define UDP_HELLO_MESSAGE_ID 0
+//#define UDP_CHALLENGE_ID 90620269561985632
+//#define UDP_CHALLENGE_QUESTION 16401976109743
+//#define UDP_CHALLENGE_ANSWER 937937698
+
 namespace Network {
 
 	namespace UDP {
@@ -22,8 +28,10 @@ namespace Network {
 			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
-			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
+			
+			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 
+			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
 			void AddConnection(unsigned int newUid, ConnectionData dir);
 
 			void PongReceived(unsigned int _userId);
@@ -36,23 +44,28 @@ namespace Network {
 			unsigned int pingerMillis;
 			unsigned int disconnectPingCycles;
 
+			unsigned int serverSalt;
 			sf::Mutex mutex;
 
 			short port;
 			sf::UdpSocket socket;
 
-			void ResendCriticalPackets();
+
+			void RemoveNonMemberCriticalPacket(unsigned int _nonMemberCriticalPacketId);
+			unsigned int AddCriticalPacket(ConnectionData dir, sf::Packet _pack);
+			void SendCriticalPackets();
 			std::map<unsigned int, ConnectionData*> connectionsById;
 			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
 			std::map<unsigned int, Proxy> criticalPackets;
+			std::map<unsigned int, std::pair<ConnectionData, sf::Packet>> nonMemberCriticalPackets;
 
 			void Debug();
 
 			void ManageSocketsThread();
 			void Ping();
 			void ManageDisconnections();
-			void CriticPacketManager();
+			void CriticalPacketsManager();
 
 			void(*FunctionProtocol)(Server &_server, ConnectionData dir, sf::Packet& packet);
 		};
@@ -60,7 +73,12 @@ namespace Network {
 		class Client {
 		public:
 			static Client &Instance();
-			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort);
+			void Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis = 1000);
+
+			// Add Critical Packet
+			unsigned int AddCriticalPacket(sf::Packet _pack);
+			void RemoveCriticalPacket(unsigned int _criticalPacketId);
+
 
 			void Send(sf::Packet _packet);
 		private:
@@ -68,8 +86,21 @@ namespace Network {
 			bool isRunning;
 			void ManageSocket();
 			void Pong();
+
+			unsigned int saltChecksum;
+			unsigned int clientSalt;
+			unsigned int criticalPacketMillis;
+
+			int helloPacketId;
+
+			void SendCriticalPackets();
+			void CriticalPacketsManager();
+
 			sf::UdpSocket socketToBootstrapServer;
 			sf::IpAddress serverIp;
+
+			std::map<unsigned int, sf::Packet> criticalPackets;
+
 			unsigned int serverPort;
 			void(*FunctionProtocol)(Client &_client, sf::Packet& packet);
 		};
@@ -83,7 +114,7 @@ namespace Network {
 			void Run(void(*funcProtocol)(Peer &_peer, sf::Packet& packet), std::string _ip, short _port, bool debug = false);
 
 			void Send(int peerIndex, sf::Packet pack);
-
+			void BroadcastSend(sf::Packet pack);
 
 		private:
 			Peer();
