@@ -144,13 +144,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
-    <ClInclude Include="PlayerCluedo.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerInfo.h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssetManager.cpp" />
-    <ClCompile Include="PlayerCluedo.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerInfo.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

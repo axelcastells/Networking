@@ -1,5 +1,6 @@
 #pragma once
 #include <PlayerInfo.h>
+#include <Player.h>
 #include <SFML\Network.hpp>
 
 #include <iostream>
@@ -349,7 +350,6 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
 }
 
- 
 //int Run() {
 //	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
 //	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
@@ -493,6 +493,102 @@ void Cluedo()
 	}
 }
 
+void NerverSplitPlayerMovement(Player *player, float velocity) 
+{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x, player->GetPos().y - velocity)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x, player->GetPos().y + velocity)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x - velocity, player->GetPos().y)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x + velocity, player->GetPos().y)
+		);
+	}
+}
+
+void NerverSplit() 
+{
+	sf::RenderWindow window(sf::VideoMode(1370, 765), "Game");
+	window.setFramerateLimit(60);
+
+	AssetManager manager;
+
+	AddSprite("RoomUDP.png", sf::Vector2f(0, 0), sf::Vector2f(1, 1));
+	Player *player = new Player();
+	player->SetPos(sf::Vector2f(50.0f, 50.0f));
+	player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	float velocity = 3.0f;
+
+	sf::Clock clock;
+	sf::Time elapsedTime;
+
+	while (window.isOpen())
+	{
+		//Time. 
+		sf::Time deltaTime = clock.restart();
+		elapsedTime += deltaTime;
+
+		//Make the loop game. 
+		//1. Input.  
+		sf::Event event; // variable ref. 
+		NerverSplitPlayerMovement(player, velocity);
+
+		while (window.pollEvent(event))
+		{
+			switch (event.type) 
+			{
+			case sf::Event::EventType::Closed:
+				window.close();
+				break;
+			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::F) {
+					std::string folder = "images/";
+					sf::Texture texture;
+					texture.loadFromFile(folder + "Personaje2.png");
+
+					sf::Sprite bullet = sf::Sprite(texture);
+					bullet.setPosition(sf::Vector2f(player->GetPos().x + 2, player->GetPos().y));
+					player->bullets.push_back(bullet);
+					std::cout << "SHOOT" << std::endl;
+				}
+				break;
+			}
+		}
+		//2. Update.
+
+		//3. Clear. 
+		window.clear(sf::Color::Black);
+		//4. Draw or Render: Dibjar objetos creados. 
+		AssetManager::DrawAllSprites(&window);
+		player->DrawPlayer(&window);
+		player->MoveAllBullets();
+
+		for (int i = 0; i < player->bullets.size(); i++)
+		{
+			window.draw(player->bullets[i]);
+		}
+
+
+		window.display(); // Ultimo metodo a llamar. 
+	}
+
+}
+
 int main()
 {
 	// INIT PLAYER
@@ -511,8 +607,8 @@ int main()
 	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
 
 	///PARTIDA
-	Cluedo();
-
+	/*Cluedo();*/
+	NerverSplit();
 
 	//Partida
 	//while (!startGame)
