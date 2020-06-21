@@ -57,13 +57,13 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	packet >> intHead;
 	Header head = (Header)intHead;
 
-	//Només missatges rebuts, respostes al main.
+	//Nomï¿½s missatges rebuts, respostes al main.
 	switch (head)
 	{
 	case START:
 		startGame = true;
 		/*
-		// Missatge rebut per començar la partida
+		// Missatge rebut per comenï¿½ar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
 							//_<GIVENCARDS>_<IDSCARTES>
 
@@ -81,11 +81,11 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			// Asignar la ID al jugador.
 			players[i].SetColor((PlayerInfo::Color)_color);
 
-			//Asignar la posició inicial al jugador.
+			//Asignar la posiciï¿½ inicial al jugador.
 			packet >> positionX >> positionY; //PLAYERPOSITIONS
 
 			player.SetPosition(positionX, positionY);
-			std::cout << "El jugador " << (int)players[i].GetColor() << " comença en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " comenï¿½a en la posiciï¿½ X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 
@@ -129,8 +129,8 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 				//WEAPONS
 			case 7:
-				hand.push_back(carta(WEAPON, "Puñal", 7));
-				std::cout << "Has rebut la carta: " << "Puñal" << std::endl;
+				hand.push_back(carta(WEAPON, "Puï¿½al", 7));
+				std::cout << "Has rebut la carta: " << "Puï¿½al" << std::endl;
 				break;
 			case 8:
 				hand.push_back(carta(WEAPON, "Cuerda", 8));
@@ -202,7 +202,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 		//DESMONTAR PACKET -> <UPDATE_POSITIONS>_<PLAYER_ID>_<NEW_POS>
 
-		//Missatge rebut per actualitzar la posició dels jugadors
+		//Missatge rebut per actualitzar la posiciï¿½ dels jugadors
 		for (int i = 0; i < currentPlayersJoined; i++)
 		{
 			
@@ -211,7 +211,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> positionX >> positionY;
 
 			player.SetPosition(positionX,positionY);
-			std::cout << "El jugador " << (int)players[i].GetColor() << " esta en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " esta en la posiciï¿½ X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 		packet.clear();
@@ -238,13 +238,13 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 		{
 			std::cout << "Pots escollir pista." << std::endl;
 
-			std::cout << "Quin tipus de pista vols rebre? 1- Personatge | 2- Arma | 3- Habitació" << std::endl;
+			std::cout << "Quin tipus de pista vols rebre? 1- Personatge | 2- Arma | 3- Habitaciï¿½" << std::endl;
 			std::cin >> pistaType;
 			
 			switch (pistaType)
 			{
 			case 0: // PERSONATGE
-				std::cout << "Tipo: Personatge, Escull entre els següents personatges: Amapola | Rubio | Orquidea | Prado | Celeste | Mora." << std::endl;
+				std::cout << "Tipo: Personatge, Escull entre els segï¿½ents personatges: Amapola | Rubio | Orquidea | Prado | Celeste | Mora." << std::endl;
 				while (escollirPista != "Amapola" && escollirPista != "Rubio" && escollirPista != "Orquidea" && escollirPista != "Prado" && escollirPista != "Celeste" && escollirPista != "Mora")
 				{
 					std::cout << "Introdueix el nom del personatge que vols obtenir la pista." << std::endl;
@@ -253,16 +253,16 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 				break;
 
 			case 1: // Arma
-				std::cout << "Tipo: Arma, Escull entre les següents armes: Puñal | Cuerda | Candelabro | Pistola | Tuberia de Plomo | Herramienta." << std::endl;
-				while (escollirPista != "Puñal" && escollirPista != "Cuerda" && escollirPista != "Candelabro" && escollirPista != "Pistola" && escollirPista != "Herramienta" && escollirPista != "Tuberia de Plomo" && escollirPista != "Tuberia")
+				std::cout << "Tipo: Arma, Escull entre les segï¿½ents armes: Puï¿½al | Cuerda | Candelabro | Pistola | Tuberia de Plomo | Herramienta." << std::endl;
+				while (escollirPista != "Puï¿½al" && escollirPista != "Cuerda" && escollirPista != "Candelabro" && escollirPista != "Pistola" && escollirPista != "Herramienta" && escollirPista != "Tuberia de Plomo" && escollirPista != "Tuberia")
 				{
 					std::cout << "Introdueix el nom de l'arma que vols obtenir la pista." << std::endl;
 					std::cin >> escollirPista;
 				}
 				break;
 
-			case 2: // Habitació
-				std::cout << "Tipo: Habitacio, Escull entre les següents habitacions: Biblioteca | Cocina | Billar | Baile | Invernadero | Comedor | Vestibulo | Salon | Estudio" << std::endl;
+			case 2: // Habitaciï¿½
+				std::cout << "Tipo: Habitacio, Escull entre les segï¿½ents habitacions: Biblioteca | Cocina | Billar | Baile | Invernadero | Comedor | Vestibulo | Salon | Estudio" << std::endl;
 				while (escollirPista != "Biblioteca" && escollirPista != "Cocina" && escollirPista != "Billar" && escollirPista != "Baile" && escollirPista != "Invernadero" && escollirPista != "Comedor" && escollirPista != "Vestibulo" && escollirPista != "Salon" && escollirPista != "Estudio")
 				{
 					std::cout << "Introdueix el nom de l'habitacio que vols obtenir la pista." << std::endl;
@@ -300,11 +300,11 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 		// <PLAYER_ID>_<ACUSE>_<MURDERER>_<WEAPON>_<ROOM>
 
 		packet >> Murderer >> Weapon >> Room;
-		std::cout << "El jugador: " << "PlayerID" << " fa la següent acusació " << "l'assasí es: " << Murderer << " amb l'arma " << Weapon << "a la sala " << Room << std::endl;
+		std::cout << "El jugador: " << "PlayerID" << " fa la segï¿½ent acusaciï¿½ " << "l'assasï¿½ es: " << Murderer << " amb l'arma " << Weapon << "a la sala " << Room << std::endl;
 		packet.clear();
 		break;
 
-		//Rebre la notificació de qui guanya la partida i acabar
+		//Rebre la notificaciï¿½ de qui guanya la partida i acabar
 	case ACUSE_SUCCESS:
 
 		packet.clear();
@@ -604,7 +604,8 @@ int main()
 	
 
 	//Connect a Servidor
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	std::thread clientThread(Run);
+	clientThread.join();
 
 	///PARTIDA
 	/*Cluedo();*/
