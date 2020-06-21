@@ -352,14 +352,14 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
 }
 
-//int Run() {
-//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-//	sf::Packet connectPacket;
-//	connectPacket << 111;
-//	//TCP_CLIENT.Send(connectPacket);
-//	return 0;
-//}
+int Run() {
+	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	sf::Packet connectPacket;
+	connectPacket << 0;
+	TCP_CLIENT.Send(connectPacket);
+	return 0;
+}
 
 std::string folder = "images/";
 
@@ -413,7 +413,7 @@ void Cluedo()
 	//Init(); //Despues de la creacion de la ventana y propiedades. 
 
 	///PLAYER COMENTADO
-	PlayerCLUEDO *player = new PlayerCLUEDO();
+	Player *player = new Player();
 	player->SetScale(sf::Vector2f(0.5f, 0.5f));
 	player->SetPos(sf::Vector2f(10, 50));
 
@@ -610,8 +610,8 @@ int main()
 	clientThread.join();
 
 	///PARTIDA
-	/*Cluedo();*/
-	NerverSplit();
+	//Cluedo();
+	//NerverSplit();
 
 	//Partida
 	while (!startGame)

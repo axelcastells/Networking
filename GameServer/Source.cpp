@@ -162,8 +162,9 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 								startPacket << it->id;
 							}
 							TCP_SERVER.Send(i, j, startPacket);
+							std::cout << "Enviem els paquets" << std::endl;
 						}	
-						TirarDaus(i,0);//Tirem els primers daus de la partida tot assignant qui serà el jugador que començarà
+						TirarDaus(i,0); //Tirem els primers daus de la partida tot assignant qui serà el jugador que començarà
 					}
 					break;
 				}
