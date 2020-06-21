@@ -27,3 +27,28 @@ sf::Texture& AssetManager::GetTexture(std::string const&filename) {
 	}
 
 }
+
+std::vector<std::string> AssetManager::GetNames()
+{
+	std::vector<std::string> names;
+	for (std::map<std::string, sf::Texture>::iterator 
+		it = sInstance->textures.begin(); it != sInstance->textures.end(); ++it) 
+	{
+		names.push_back(it->first);
+	}
+	return names;
+}
+
+void AssetManager::DrawAllSprites(sf::RenderWindow *window)
+{
+	for (int i = 0; i < sInstance->sprites.size(); i++)
+	{
+		window->draw(sInstance->sprites[i]);
+	}
+}
+
+void AssetManager::PushSprite(sf::Sprite sprite)
+{
+	sInstance->sprites.push_back(sprite);
+}
+
