@@ -3,7 +3,8 @@
 
 PlayerCLUEDO::PlayerCLUEDO()
 {
-	sprite = sf::Sprite(AssetManager::GetTexture("sprite1.png"));
+	std::string folder = "images/";
+	sprite = sf::Sprite(AssetManager::GetTexture(folder + "sprite1.png"));
 }
 
 void PlayerCLUEDO::SetPos(sf::Vector2f position)

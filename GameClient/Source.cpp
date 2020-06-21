@@ -1,5 +1,6 @@
 #pragma once
 #include <PlayerInfo.h>
+#include <PlayerCluedo.h>
 #include <SFML\Network.hpp>
 
 #include <iostream>
@@ -60,8 +61,9 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	switch (head)
 	{
 	case START:
+	
 		startGame = true;
-		/*
+		
 		// Missatge rebut per començar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
 							//_<GIVENCARDS>_<IDSCARTES>
@@ -78,23 +80,23 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> _color; // PLAYERID
 
 			// Asignar la ID al jugador.
-			players[i].SetColor((PlayerInfo::Color)_color);
+			player.SetColor((PlayerInfo::Color)_color);
 
 			//Asignar la posició inicial al jugador.
 			packet >> positionX >> positionY; //PLAYERPOSITIONS
 
 			player.SetPosition(positionX, positionY);
-			std::cout << "El jugador " << (int)players[i].GetColor() << " comença en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)player.GetColor() << " comenca en la posicio X: " << player.GetPosition().x << " Y: " << player.GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 
 		// Assignar les posicions amb el vector com hem fet amb el color
 		//packet >> playerInfo.position;
-		
+		packet >> size;
 		// Cartes rebudes
 		packet >> size; //GIVENCARDS quantes cartes rebo
 
-		std::cout << "Has rebut %d " << size << " Cartes" << std::endl;
+		std::cout << "Has rebut " << size << " Cartes" << std::endl;
 		for (int i = 0; i < size; i++)
 		{
 			packet >> receivedCard; //IDCARTES
@@ -193,7 +195,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			}
 
 		}
-		*/
+		
 		packet.clear();
 		break;
 
@@ -403,17 +405,17 @@ void Cluedo()
 	AddSprite("SALA.png", sf::Vector2f(530, 520), scaleRooms);
 	///
 
-	std::vector<std::string> names = AssetManager::GetNames();
+	/*std::vector<std::string> names = AssetManager::GetNames();
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::cout << names[i] << std::endl;
-	}
+	}*/
 	//Init(); //Despues de la creacion de la ventana y propiedades. 
 
 	///PLAYER COMENTADO
-	//PlayerCLUEDO *player = new PlayerCLUEDO();
-	//player->SetScale(sf::Vector2f(0.5f, 0.5f));
-	//player->SetPos(sf::Vector2f(10, 50));
+	PlayerCLUEDO *player = new PlayerCLUEDO();
+	player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	player->SetPos(sf::Vector2f(10, 50));
 
 
 	sf::Clock clock;
@@ -437,7 +439,7 @@ void Cluedo()
 				break;
 
 			case sf::Event::KeyPressed:
-				/*if (event.key.code == sf::Keyboard::Up)
+				if (event.key.code == sf::Keyboard::Up)
 				{
 					sf::Vector2f playerPos = player->GetPos();
 					player->SetPos(
@@ -467,28 +469,28 @@ void Cluedo()
 					player->SetPos(
 						sf::Vector2f(playerPos.x + 260, playerPos.y)
 					);
-				}*/
+				}
 
 				break;
 			}
 		}
 		//2. Update.
 		///Constraints 
-		//sf::Vector2f playerPos = player->GetPos();
-		//if (playerPos.y < 0)
-		//	player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
-		//if (playerPos.y > 520)
-		//	player->SetPos(sf::Vector2f(playerPos.x, 520));
-		//if (playerPos.x < 0)
-		//	player->SetPos(sf::Vector2f(0.0f, playerPos.y));
-		//if (playerPos.x > 530)
-		//	player->SetPos(sf::Vector2f(530, playerPos.y));
+		sf::Vector2f playerPos = player->GetPos();
+		if (playerPos.y < 0)
+			player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
+		if (playerPos.y > 520)
+			player->SetPos(sf::Vector2f(playerPos.x, 520));
+		if (playerPos.x < 0)
+			player->SetPos(sf::Vector2f(0.0f, playerPos.y));
+		if (playerPos.x > 530)
+			player->SetPos(sf::Vector2f(530, playerPos.y));
 
 		//3. Clear. 
 		window.clear(sf::Color::Black);
 		//4. Draw or Render: Dibjar objetos creados. 
 		AssetManager::DrawAllSprites(&window);
-		//player->DrawPlayer(&window);
+		player->DrawPlayer(&window);
 		window.display(); // Ultimo metodo a llamar. 
 	}
 }
@@ -511,17 +513,16 @@ int main()
 	std::thread clientThread(Run);
 	clientThread.join();
 
-	///PARTIDA
-	Cluedo();
-
 
 	//Partida
-	//while (!startGame)
-	//{
-	//	//Esperant jugadors a la partida
+	while (!startGame)
+	{
+		//Esperant jugadors a la partida
 
-	//};
+	};
 	
+	///PARTIDA
+	Cluedo();
 	//g.DrawDungeon();
 
 
