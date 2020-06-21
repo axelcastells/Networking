@@ -1,5 +1,6 @@
 #pragma once
 #include <PlayerInfo.h>
+#include <Player.h>
 #include <SFML\Network.hpp>
 
 #include <iostream>
@@ -56,13 +57,15 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	packet >> intHead;
 	Header head = (Header)intHead;
 
-	//Només missatges rebuts, respostes al main.
+	//Nomï¿½s missatges rebuts, respostes al main.
+	//Nomï¿½s missatges rebuts, respostes al main.
 	switch (head)
 	{
 	case START:
+	
 		startGame = true;
-		/*
-		// Missatge rebut per començar la partida
+		
+		// Missatge rebut per comenï¿½ar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
 							//_<GIVENCARDS>_<IDSCARTES>
 
@@ -78,23 +81,23 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> _color; // PLAYERID
 
 			// Asignar la ID al jugador.
-			players[i].SetColor((PlayerInfo::Color)_color);
+			player.SetColor((PlayerInfo::Color)_color);
 
-			//Asignar la posició inicial al jugador.
+			//Asignar la posiciï¿½ inicial al jugador.
 			packet >> positionX >> positionY; //PLAYERPOSITIONS
 
 			player.SetPosition(positionX, positionY);
-			std::cout << "El jugador " << (int)players[i].GetColor() << " comença en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)player.GetColor() << " comenca en la posicio X: " << player.GetPosition().x << " Y: " << player.GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 
 		// Assignar les posicions amb el vector com hem fet amb el color
 		//packet >> playerInfo.position;
-		
+		packet >> size;
 		// Cartes rebudes
 		packet >> size; //GIVENCARDS quantes cartes rebo
 
-		std::cout << "Has rebut %d " << size << " Cartes" << std::endl;
+		std::cout << "Has rebut " << size << " Cartes" << std::endl;
 		for (int i = 0; i < size; i++)
 		{
 			packet >> receivedCard; //IDCARTES
@@ -128,8 +131,8 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 				//WEAPONS
 			case 7:
-				hand.push_back(carta(WEAPON, "Puñal", 7));
-				std::cout << "Has rebut la carta: " << "Puñal" << std::endl;
+				hand.push_back(carta(WEAPON, "Puï¿½al", 7));
+				std::cout << "Has rebut la carta: " << "Puï¿½al" << std::endl;
 				break;
 			case 8:
 				hand.push_back(carta(WEAPON, "Cuerda", 8));
@@ -193,7 +196,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			}
 
 		}
-		*/
+		
 		packet.clear();
 		break;
 
@@ -201,7 +204,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 		//DESMONTAR PACKET -> <UPDATE_POSITIONS>_<PLAYER_ID>_<NEW_POS>
 
-		//Missatge rebut per actualitzar la posició dels jugadors
+		//Missatge rebut per actualitzar la posiciï¿½ dels jugadors
 		for (int i = 0; i < currentPlayersJoined; i++)
 		{
 			
@@ -210,7 +213,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> positionX >> positionY;
 
 			player.SetPosition(positionX,positionY);
-			std::cout << "El jugador " << (int)players[i].GetColor() << " esta en la posició X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " esta en la posiciï¿½ X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 		packet.clear();
@@ -237,13 +240,13 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 		{
 			std::cout << "Pots escollir pista." << std::endl;
 
-			std::cout << "Quin tipus de pista vols rebre? 1- Personatge | 2- Arma | 3- Habitació" << std::endl;
+			std::cout << "Quin tipus de pista vols rebre? 1- Personatge | 2- Arma | 3- Habitaciï¿½" << std::endl;
 			std::cin >> pistaType;
 			
 			switch (pistaType)
 			{
 			case 0: // PERSONATGE
-				std::cout << "Tipo: Personatge, Escull entre els següents personatges: Amapola | Rubio | Orquidea | Prado | Celeste | Mora." << std::endl;
+				std::cout << "Tipo: Personatge, Escull entre els segï¿½ents personatges: Amapola | Rubio | Orquidea | Prado | Celeste | Mora." << std::endl;
 				while (escollirPista != "Amapola" && escollirPista != "Rubio" && escollirPista != "Orquidea" && escollirPista != "Prado" && escollirPista != "Celeste" && escollirPista != "Mora")
 				{
 					std::cout << "Introdueix el nom del personatge que vols obtenir la pista." << std::endl;
@@ -252,16 +255,16 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 				break;
 
 			case 1: // Arma
-				std::cout << "Tipo: Arma, Escull entre les següents armes: Puñal | Cuerda | Candelabro | Pistola | Tuberia de Plomo | Herramienta." << std::endl;
-				while (escollirPista != "Puñal" && escollirPista != "Cuerda" && escollirPista != "Candelabro" && escollirPista != "Pistola" && escollirPista != "Herramienta" && escollirPista != "Tuberia de Plomo" && escollirPista != "Tuberia")
+				std::cout << "Tipo: Arma, Escull entre les segï¿½ents armes: Puï¿½al | Cuerda | Candelabro | Pistola | Tuberia de Plomo | Herramienta." << std::endl;
+				while (escollirPista != "Puï¿½al" && escollirPista != "Cuerda" && escollirPista != "Candelabro" && escollirPista != "Pistola" && escollirPista != "Herramienta" && escollirPista != "Tuberia de Plomo" && escollirPista != "Tuberia")
 				{
 					std::cout << "Introdueix el nom de l'arma que vols obtenir la pista." << std::endl;
 					std::cin >> escollirPista;
 				}
 				break;
 
-			case 2: // Habitació
-				std::cout << "Tipo: Habitacio, Escull entre les següents habitacions: Biblioteca | Cocina | Billar | Baile | Invernadero | Comedor | Vestibulo | Salon | Estudio" << std::endl;
+			case 2: // Habitaciï¿½
+				std::cout << "Tipo: Habitacio, Escull entre les segï¿½ents habitacions: Biblioteca | Cocina | Billar | Baile | Invernadero | Comedor | Vestibulo | Salon | Estudio" << std::endl;
 				while (escollirPista != "Biblioteca" && escollirPista != "Cocina" && escollirPista != "Billar" && escollirPista != "Baile" && escollirPista != "Invernadero" && escollirPista != "Comedor" && escollirPista != "Vestibulo" && escollirPista != "Salon" && escollirPista != "Estudio")
 				{
 					std::cout << "Introdueix el nom de l'habitacio que vols obtenir la pista." << std::endl;
@@ -299,11 +302,11 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 		// <PLAYER_ID>_<ACUSE>_<MURDERER>_<WEAPON>_<ROOM>
 
 		packet >> Murderer >> Weapon >> Room;
-		std::cout << "El jugador: " << "PlayerID" << " fa la següent acusació " << "l'assasí es: " << Murderer << " amb l'arma " << Weapon << "a la sala " << Room << std::endl;
+		std::cout << "El jugador: " << "PlayerID" << " fa la segï¿½ent acusaciï¿½ " << "l'assasï¿½ es: " << Murderer << " amb l'arma " << Weapon << "a la sala " << Room << std::endl;
 		packet.clear();
 		break;
 
-		//Rebre la notificació de qui guanya la partida i acabar
+		//Rebre la notificaciï¿½ de qui guanya la partida i acabar
 	case ACUSE_SUCCESS:
 
 		packet.clear();
@@ -351,15 +354,14 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 	//UDP_CLIENT.AddCommand(commandPacket);
 }
 
- 
-//int Run() {
-//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-//	sf::Packet connectPacket;
-//	connectPacket << 111;
-//	//TCP_CLIENT.Send(connectPacket);
-//	return 0;
-//}
+int Run() {
+	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	sf::Packet connectPacket;
+	connectPacket << 0;
+	TCP_CLIENT.Send(connectPacket);
+	return 0;
+}
 
 std::string folder = "images/";
 
@@ -405,17 +407,17 @@ void Cluedo()
 	AddSprite("SALA.png", sf::Vector2f(530, 520), scaleRooms);
 	///
 
-	std::vector<std::string> names = AssetManager::GetNames();
+	/*std::vector<std::string> names = AssetManager::GetNames();
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::cout << names[i] << std::endl;
-	}
+	}*/
 	//Init(); //Despues de la creacion de la ventana y propiedades. 
 
 	///PLAYER COMENTADO
-	//PlayerCLUEDO *player = new PlayerCLUEDO();
-	//player->SetScale(sf::Vector2f(0.5f, 0.5f));
-	//player->SetPos(sf::Vector2f(10, 50));
+	Player *player = new Player();
+	player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	player->SetPos(sf::Vector2f(10, 50));
 
 
 	sf::Clock clock;
@@ -439,7 +441,7 @@ void Cluedo()
 				break;
 
 			case sf::Event::KeyPressed:
-				/*if (event.key.code == sf::Keyboard::Up)
+				if (event.key.code == sf::Keyboard::Up)
 				{
 					sf::Vector2f playerPos = player->GetPos();
 					player->SetPos(
@@ -469,30 +471,126 @@ void Cluedo()
 					player->SetPos(
 						sf::Vector2f(playerPos.x + 260, playerPos.y)
 					);
-				}*/
+				}
 
 				break;
 			}
 		}
 		//2. Update.
 		///Constraints 
-		//sf::Vector2f playerPos = player->GetPos();
-		//if (playerPos.y < 0)
-		//	player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
-		//if (playerPos.y > 520)
-		//	player->SetPos(sf::Vector2f(playerPos.x, 520));
-		//if (playerPos.x < 0)
-		//	player->SetPos(sf::Vector2f(0.0f, playerPos.y));
-		//if (playerPos.x > 530)
-		//	player->SetPos(sf::Vector2f(530, playerPos.y));
+		sf::Vector2f playerPos = player->GetPos();
+		if (playerPos.y < 0)
+			player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
+		if (playerPos.y > 520)
+			player->SetPos(sf::Vector2f(playerPos.x, 520));
+		if (playerPos.x < 0)
+			player->SetPos(sf::Vector2f(0.0f, playerPos.y));
+		if (playerPos.x > 530)
+			player->SetPos(sf::Vector2f(530, playerPos.y));
 
 		//3. Clear. 
 		window.clear(sf::Color::Black);
 		//4. Draw or Render: Dibjar objetos creados. 
 		AssetManager::DrawAllSprites(&window);
-		//player->DrawPlayer(&window);
+		player->DrawPlayer(&window);
 		window.display(); // Ultimo metodo a llamar. 
 	}
+}
+
+void NerverSplitPlayerMovement(Player *player, float velocity) 
+{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x, player->GetPos().y - velocity)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x, player->GetPos().y + velocity)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x - velocity, player->GetPos().y)
+		);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) //Smooth movement.
+	{
+		/*std::cout << "Key F" << std::endl;*/player->SetPos(
+			sf::Vector2f(player->GetPos().x + velocity, player->GetPos().y)
+		);
+	}
+}
+
+void NerverSplit() 
+{
+	sf::RenderWindow window(sf::VideoMode(1370, 765), "Game");
+	window.setFramerateLimit(60);
+
+	AssetManager manager;
+
+	AddSprite("RoomUDP.png", sf::Vector2f(0, 0), sf::Vector2f(1, 1));
+	Player *player = new Player();
+	player->SetPos(sf::Vector2f(50.0f, 50.0f));
+	player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	float velocity = 3.0f;
+
+	sf::Clock clock;
+	sf::Time elapsedTime;
+
+	while (window.isOpen())
+	{
+		//Time. 
+		sf::Time deltaTime = clock.restart();
+		elapsedTime += deltaTime;
+
+		//Make the loop game. 
+		//1. Input.  
+		sf::Event event; // variable ref. 
+		NerverSplitPlayerMovement(player, velocity);
+
+		while (window.pollEvent(event))
+		{
+			switch (event.type) 
+			{
+			case sf::Event::EventType::Closed:
+				window.close();
+				break;
+			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::F) {
+					std::string folder = "images/";
+					sf::Texture texture;
+					texture.loadFromFile(folder + "Personaje2.png");
+
+					sf::Sprite bullet = sf::Sprite(texture);
+					bullet.setPosition(sf::Vector2f(player->GetPos().x + 2, player->GetPos().y));
+					player->bullets.push_back(bullet);
+					std::cout << "SHOOT" << std::endl;
+				}
+				break;
+			}
+		}
+		//2. Update.
+
+		//3. Clear. 
+		window.clear(sf::Color::Black);
+		//4. Draw or Render: Dibjar objetos creados. 
+		AssetManager::DrawAllSprites(&window);
+		player->DrawPlayer(&window);
+		player->MoveAllBullets();
+
+		for (int i = 0; i < player->bullets.size(); i++)
+		{
+			window.draw(player->bullets[i]);
+		}
+
+
+		window.display(); // Ultimo metodo a llamar. 
+	}
+
 }
 
 int main()
@@ -510,7 +608,8 @@ int main()
 	
 
 	//Connect a Servidor
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	std::thread clientThread(Run);
+	clientThread.join();
 
 	sf::Packet commandPacket;
 	commandPacket << 75;
@@ -521,16 +620,18 @@ int main()
 	//}
 
 	///PARTIDA
-	Cluedo();
-
+	//Cluedo();
+	//NerverSplit();
 
 	//Partida
-	//while (!startGame)
-	//{
-	//	//Esperant jugadors a la partida
+	while (!startGame)
+	{
+		//Esperant jugadors a la partida
 
-	//};
+	};
 	
+	///PARTIDA
+	Cluedo();
 	//g.DrawDungeon();
 
 

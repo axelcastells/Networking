@@ -107,6 +107,9 @@ void TCP::Server::Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, i
 	}
 }
 
+int TCP::Server::GetMaxPlayersRoom() {
+	return maxPlayersRoom;
+}
 
 int TCP::Server::CreateRoom(int maxClients) {
 	serverRooms.push_back(ServerRoom(maxClients));
@@ -164,6 +167,7 @@ void TCP::Server::BroadcastSend(int _roomIndex, sf::Packet & packet)
 	}
 }
 
+
 void TCP::Server::ManageSockets()
 {
 	while (1) {
@@ -197,6 +201,7 @@ void TCP::Server::ManageSockets()
 						sf::Packet packet;
 						sf::Socket::Status status = unassignedSockets[i]->receive(packet);
 						if (status == sf::Socket::Status::Done || status == sf::Socket::Status::Partial) {
+							//The client goes to the waiting list
 							FunctionProtocol(Instance(), packet, -1, i);
 						}
 						else if (status == sf::Socket::Status::Disconnected)
@@ -223,33 +228,6 @@ void TCP::Server::ManageSockets()
 				}
 			}
 		}
-		//Add unassigned clients to the game rooms
-		for (int i = 0; i < unassignedSockets.size(); i++) {
-			if (RoomsCount() == 0) {
-				CreateRoom(maxPlayersRoom);
-				JoinRoom(i, 0);
-			}
-			else {
-				for (int j = 0; j < RoomsCount(); j++) {
-					if (GetRoom(j).GetSocketsCount() < GetRoom(j).MaxClients()) {
-						JoinRoom(i, j);
-						if (GetRoom(j).GetSocketsCount() == GetRoom(j).MaxClients()) {
-							std::cout << "Room " << j << " will start the game." << std::endl;
-							sf::Packet startPacket;
-							startPacket << 0;
-							BroadcastSend(j, startPacket);
-						}
-					}
-					/*else if (RoomsCount() < maxServerRooms) {
-						CreateRoom(maxPlayersRoom);
-						JoinRoom(i, j+1);
-					}
-					else {
-
-					}*/
-				}
-			}
-		}
 	}
 }
 
@@ -263,6 +241,7 @@ int TCP::Server::LastSocketIndex()
 {
 	return unassignedSockets.size() - 1;
 }
+
 
 // --------------------------
 // PEER
