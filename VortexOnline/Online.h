@@ -174,6 +174,7 @@ namespace Network {
 		public:
 			static Server &Instance();
 
+			//If roomIndex == -1 the player is on the waiting list
 			void Run(void(*funcProtocol)(Server &_server, sf::Packet& packet, int roomIndex, int socketIndex), short _port, int _maxRooms = 1, int _maxPlayers = 3, bool debug = false);
 
 			// Returns new room index
@@ -190,6 +191,8 @@ namespace Network {
 			void Send(int room, int sock, sf::Packet& packet);
 			void BroadcastSend(sf::Packet& packet);
 			void BroadcastSend(int _roomIndex, sf::Packet& packet);
+
+			int GetMaxPlayersRoom();
 
 		private:
 			Server();

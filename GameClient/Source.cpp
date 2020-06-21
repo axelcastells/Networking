@@ -348,14 +348,14 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 }
 
  
-//int Run() {
-//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-//	sf::Packet connectPacket;
-//	connectPacket << 111;
-//	//TCP_CLIENT.Send(connectPacket);
-//	return 0;
-//}
+int Run() {
+	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	sf::Packet connectPacket;
+	connectPacket << 0;
+	TCP_CLIENT.Send(connectPacket);
+	return 0;
+}
 
 int main()
 {
@@ -372,7 +372,8 @@ int main()
 	
 
 	//Connect a Servidor
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	std::thread clientThread(Run);
+	clientThread.join();
 
 	//Partida
 	while (!startGame)

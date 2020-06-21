@@ -34,6 +34,32 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 
 	switch (head)
 	{
+		//Arriba un client nou per jugar
+	case CONNECT:
+
+		if (roomIndex == -1 && TCP_SERVER.RoomsCount() == 0) { //El jugador esta a la llista d'espera i no hi ha sales creades
+			TCP_SERVER.CreateRoom(TCP_SERVER.GetMaxPlayersRoom());
+			TCP_SERVER.JoinRoom(socketIndex, 0);
+		}
+		else if (roomIndex == -1 && TCP_SERVER.RoomsCount() > 0) { //El jugador esta a la llista d'espera i hi ha sales creades
+			for (int i = 0; i < TCP_SERVER.RoomsCount(); i++) {
+				if (TCP_SERVER.GetRoom(i).GetSocketsCount() < TCP_SERVER.GetRoom(i).MaxClients()) { //Hi ha espai a la sala
+					TCP_SERVER.JoinRoom(socketIndex, i);
+					if (TCP_SERVER.GetRoom(i).GetSocketsCount() == TCP_SERVER.GetRoom(i).MaxClients()) { // L'habitació ja està plena, enviem el START de partida als clients que hi ha dins
+						std::cout << "Room " << i << " will start the game." << std::endl;
+						sf::Packet startPacket;
+						startPacket << 1 << TCP_SERVER.GetRoom(i).GetSocketsCount();
+						/*for (int j = 0; j < TCP_SERVER.GetRoom(i).GetSocketsCount(); j++) {
+							startPacket << j << positionX << positionY << numero de cartes << idCartes;
+						}*/
+						TCP_SERVER.BroadcastSend(i, startPacket);
+					}
+					break;
+				}
+			}
+		}		
+		
+		break;
 		//Enviar als clients que comença la partida
 	case START:
 
@@ -208,8 +234,8 @@ std::list<carta> definirResultat(std::list<carta> &baraja)
 int main()
 {
 	//PlayerInfo playerInfo;
-	//TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
-	UDP_SERVER.Run(UDPTestingProtocol, 50000);
+	TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
+	//UDP_SERVER.Run(UDPTestingProtocol, 50000);
 	bool startGame = false;
 	int currentPlayersJoined;
 	//Partida
