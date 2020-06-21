@@ -497,10 +497,17 @@ void Network::UDP::Server::PongReceived(unsigned int _userId)
 
 void Network::UDP::Server::Send(sf::Packet _pack, ConnectionData dir)
 {
+	_pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
 	int packetMessageTag;
 	_pack >> packetMessageTag;
 	sf::Packet newPacket;
-	newPacket << packetMessageTag << serverSalt << _pack;
+	newPacket << packetMessageTag << serverSalt;
+	
+	auto nextMessage = 0;
+	while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+		_pack >> nextMessage;
+		newPacket << nextMessage;
+	}
 
 	socket.send(newPacket, dir.ip, dir.port);
 }
@@ -509,7 +516,8 @@ void Network::UDP::Server::SendBroadcast(sf::Packet _pack, unsigned int _pingTim
 {
 	mutex.lock();
 	for (auto i = connectionsById.begin(); i != connectionsById.end(); i++) {
-		socket.send(_pack, i->second->ip, i->second->port);
+		Send(_pack, ConnectionData(i->second->ip, i->second->port));
+		//socket.send(_pack, i->second->ip, i->second->port);
 		i->second->pingTime += _pingTime;
 	}
 	mutex.unlock();
@@ -633,7 +641,7 @@ void Network::UDP::Server::ManageSocketsThread()
 				if (!GetConnectionId(dir, newUid)) {
 					sf::Packet challengePacket;
 					challengePacket << (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID << (int)UDP_SYSTEM_MESSAGE::CHALLENGE_QUESTION;
-					AddCriticalPacket(dir, challengePacket);
+					challengePacketId = AddCriticalPacket(dir, challengePacket);
 				}
 			}
 			else if (potentialSystemMessageId == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID) {
@@ -642,6 +650,8 @@ void Network::UDP::Server::ManageSocketsThread()
 				potentialSystemPacket >> challengeAnswer;
 
 				if (challengeAnswer == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ANSWER) {
+					RemoveNonMemberCriticalPacket(challengePacketId);
+					
 					std::cout << "Correct challenge answer!" << std::endl;
 					dir.salt = (serverSalt & clientSalt);
 
@@ -666,11 +676,12 @@ void Network::UDP::Server::ManageSocketsThread()
 				ConnectionData* data;
 
 				if (GetConnectionData(id, &data)) {
-					if (clientSalt & serverSalt == data->salt) {
+					if ((clientSalt & serverSalt) == data->salt) {
 						std::cout << "Got PONG from client!" << std::endl;
-						ConnectionData* proxy = nullptr;
-						GetConnectionData(newUid, &proxy);
-						proxy->pingTime = 0;
+						//ConnectionData* proxy = nullptr;
+						//GetConnectionData(newUid, &proxy);
+						PongReceived(id);
+						//proxy->pingTime = 0;
 					}
 
 				}
@@ -684,10 +695,21 @@ void Network::UDP::Server::ManageSocketsThread()
 					ConnectionData* data;
 					GetConnectionData(id, &data);
 
-					if (clientSalt & serverSalt == data->salt)
+					if ((clientSalt & serverSalt) == data->salt)
 					{
-						pack << potentialSystemMessageId << potentialSystemPacket;
-						FunctionProtocol(Instance(), dir, pack);
+						//pack << potentialSystemMessageId << potentialSystemPacket;
+
+						pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						sf::Packet newPacket;
+						newPacket << potentialSystemMessageId;
+
+						auto nextMessage = 0;
+						while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+							pack >> nextMessage;
+							newPacket << nextMessage;
+						}
+
+						FunctionProtocol(Instance(), dir, newPacket);
 					}
 				}
 			}
@@ -774,11 +796,19 @@ UDP::Client& UDP::Client::Instance()
 
 void Network::UDP::Client::Send(sf::Packet _packet)
 {
-	sf::Packet packet;
-	int messageTag;
-	_packet >> messageTag;
-	packet << messageTag << clientSalt << _packet;
-	socketToBootstrapServer.send(packet, serverIp, serverPort);
+	_packet << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+	int packetMessageTag;
+	_packet >> packetMessageTag;
+	sf::Packet newPacket;
+	newPacket << packetMessageTag << clientSalt;
+
+	auto nextMessage = 0;
+	while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+		_packet >> nextMessage;
+		newPacket << nextMessage;
+	}
+
+	socketToBootstrapServer.send(newPacket, serverIp, serverPort);
 }
 
 UDP::Client::Client() {
@@ -795,11 +825,18 @@ void UDP::Client::Pong()
 unsigned int Network::UDP::Client::AddCriticalPacket(sf::Packet _pack)
 {
 	unsigned int uid = NEW_UID;
-	sf::Packet packet;
-	int messageTag;
-	_pack >> messageTag;
-	packet << messageTag << clientSalt << _pack;
-	criticalPackets[uid] = packet;
+	_pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+	int packetMessageTag;
+	_pack >> packetMessageTag;
+	sf::Packet newPacket;
+	newPacket << packetMessageTag << clientSalt;
+
+	auto nextMessage = 0;
+	while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+		_pack >> nextMessage;
+		newPacket << nextMessage;
+	}
+	criticalPackets[uid] = newPacket;
 	return uid;
 }
 
@@ -809,7 +846,7 @@ void Network::UDP::Client::RemoveCriticalPacket(unsigned int _criticalPacketId) 
 
 void UDP::Client::SendCriticalPackets() {
 	for (auto i = criticalPackets.begin(); i != criticalPackets.end(); i++) {
-		socketToBootstrapServer.send(i->second, serverIp, serverPort);
+		Send(i->second);
 	}
 }
 
@@ -851,7 +888,7 @@ void UDP::Client::ManageSocket() {
 			}
 			else if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::PING) {
 				potentialSystemPacket >> serverSalt;
-				if (serverSalt & clientSalt == saltChecksum) {
+				if ((serverSalt & clientSalt) == saltChecksum) {
 					std::cout << "Got PING from server!" << std::endl;
 					Pong();
 				}
@@ -859,9 +896,19 @@ void UDP::Client::ManageSocket() {
 			else {
 				//TODO: CONFIRM IT'S A REAL CLIENT BEFORE LAUNCHING FUNCTION PROTOCOL
 				potentialSystemPacket >> serverSalt;
-				if (serverSalt & clientSalt == saltChecksum) {
-					packet << potentialSystemId << potentialSystemPacket;
-					FunctionProtocol(Instance(), packet);
+				if ((serverSalt & clientSalt) == saltChecksum) {
+					//packet << potentialSystemId << potentialSystemPacket;
+					packet << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+					sf::Packet newPacket;
+					newPacket << potentialSystemId;
+
+					auto nextMessage = 0;
+					while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+						packet >> nextMessage;
+						newPacket << nextMessage;
+					}
+
+					FunctionProtocol(Instance(), newPacket);
 				}
 			}
 			

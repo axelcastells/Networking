@@ -7,7 +7,7 @@ struct ConnectionData {
 		ip = data.ip;
 		port = data.port;
 		pingTime = data.pingTime;
-		salt = 0;
+		salt = data.salt;
 	}
 	sf::IpAddress ip;
 	unsigned short port;
