@@ -9,7 +9,7 @@
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
-enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER};
+enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER, END_OF_PACKET};
 //#define UDP_PING_ID 109619403579
 //#define UDP_HELLO_MESSAGE_ID 0
 //#define UDP_CHALLENGE_ID 90620269561985632
@@ -34,7 +34,6 @@ namespace Network {
 			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
 			void AddConnection(unsigned int newUid, ConnectionData dir);
 
-			void PongReceived(unsigned int _userId);
 			void Send(sf::Packet _pack, ConnectionData dir);
 			void SendBroadcast(sf::Packet _pack, unsigned int _pingTime = 0);
 		private:
@@ -50,7 +49,9 @@ namespace Network {
 			short port;
 			sf::UdpSocket socket;
 
+			unsigned int challengePacketId;
 
+			void PongReceived(unsigned int _userId);
 			void RemoveNonMemberCriticalPacket(unsigned int _nonMemberCriticalPacketId);
 			unsigned int AddCriticalPacket(ConnectionData dir, sf::Packet _pack);
 			void SendCriticalPackets();
@@ -91,7 +92,8 @@ namespace Network {
 			unsigned int clientSalt;
 			unsigned int criticalPacketMillis;
 
-			int helloPacketId;
+			
+			unsigned int helloPacketId;
 
 			void SendCriticalPackets();
 			void CriticalPacketsManager();
