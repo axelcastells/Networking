@@ -3,6 +3,7 @@
 #include <SFML\Graphics.hpp>
 #include <SFML\Network.hpp>
 #include <PlayerInfo.h>
+#include <Player.h>
 #include "VortexOnline.h"
 #include "Protocol.h"
 
@@ -12,9 +13,138 @@ int dado1, dado2;
 std::list<carta> baraja, resultat;
 
 std::vector<PlayerInfo> players;
+std::vector<Player> playersUDP;
 std::list<sf::TcpSocket*>::iterator currentPlayer;
 int currentPlayer_id;
 sf::Packet packet;
+
+
+//Posar el enum amb les comandes a Playerinfo enlloc de protocol.h?
+
+//TCP Protocols
+void TCPTestingProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) 
+{
+
+}
+void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex, int socketIndex) {
+	
+	// Switch amb els diferents missatges a enviar o rebre dels clients?
+
+	int intHead;
+	packet >> intHead;
+	Header head = (Header)intHead;
+
+	switch (head)
+	{
+	//Arriba un client nou per jugar
+	case CONNECT:
+		if (roomIndex == -1 && TCP_SERVER.RoomsCount() == 0) { //El jugador esta a la llista d'espera i no hi ha sales creades
+			TCP_SERVER.CreateRoom(TCP_SERVER.GetMaxPlayersRoom());
+			TCP_SERVER.JoinRoom(socketIndex, 0);
+		}
+		else if (roomIndex == -1 && TCP_SERVER.RoomsCount() > 0) { //El jugador esta a la llista d'espera i hi ha sales creades
+			for (int i = 0; i < TCP_SERVER.RoomsCount(); i++) {
+				if (TCP_SERVER.GetRoom(i).GetSocketsCount() < TCP_SERVER.GetRoom(i).MaxClients()) { //Hi ha espai a la sala
+					TCP_SERVER.JoinRoom(socketIndex, i);
+					if (TCP_SERVER.GetRoom(i).GetSocketsCount() == TCP_SERVER.GetRoom(i).MaxClients()) { // L'habitació ja està plena, enviem el START de partida als clients que hi ha dins
+						std::cout << "Room " << i << " will start the game." << std::endl;
+						sf::Packet startPacket;
+						startPacket << 1 << TCP_SERVER.GetRoom(i).GetSocketsCount();
+						/*for (int j = 0; j < TCP_SERVER.GetRoom(i).GetSocketsCount(); j++) {
+							startPacket << j << positionX << positionY << numero de cartes << idCartes;
+						}*/
+						TCP_SERVER.BroadcastSend(i, startPacket);
+					}
+					break;
+				}
+			}
+		}		
+		
+		break;
+		//Enviar als clients que comença la partida
+	case START:
+
+		break;
+
+		//Enviar posicions dels jugadors a tots els clients
+	case UPDATE_POSITIONS:
+
+		break;
+
+		//Enviar al client que li toqui el torn
+	case YOUR_TURN:
+
+		break;
+
+		
+	case Header::MOVE:
+
+		break;
+
+		//
+	case GUESS:
+
+		break;
+
+		//
+	case SUPOSE:
+
+		break;
+
+		//
+	case ACUSE:
+
+		break;
+
+		//El client que fa la acusacio encerta i acaba la partida.
+	case ACUSE_SUCCESS:
+
+		break;
+
+		//El client que fa la acusacio falla i es eliminat
+	case ACUSE_FAIL:
+
+		break;
+
+		//
+	case SHOW_CARDS:
+
+		break;
+
+		//
+	case SHOWING_CARDS:
+
+		break;
+
+	}
+}
+
+//UDP Protocols
+//void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet) 
+//{
+//	//server.
+//	//unsigned int id;
+//	//if (server.GetConnectionId(dir, id)) {
+//	//	server.RemoveCriticalPacket()
+//	//}
+//
+//	int intHead;
+//	packet >> intHead;
+//	HeaderUDP head = (HeaderUDP)intHead;
+//
+//	switch (head)
+//	{
+//	case MOVE:
+//		break;
+//	case UPDATE_POSITIONSUDP:
+//		///Send the new players positions to the others.
+//		break;
+//	case STARTUDP:
+//		///Recivir la ip puerto de cliente existente o nuevo. 
+//		break;
+//	}
+//
+//}
 
 //roomindex > 0 esta dins d'una sala.
 
@@ -117,7 +247,12 @@ std::list<carta> DefinirResultat(std::list<carta> &baraja)
 	
 }
 
-
+bool SimulationProtocol(sf::Packet packet, sf::Packet* _correctionPacket) {
+	auto type = 0;
+	packet >> type;
+	std::cout << "Simulating packet type: " << type << std::endl;
+	return true;
+}
 
 
 //TCP Protocols
@@ -231,25 +366,30 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 //UDP Protocols
 void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet)
 {
-	//server.
-	//unsigned int id;
-	//if (server.GetConnectionId(dir, id)) {
-	//	server.RemoveCriticalPacket()
-	//}
-}
 
-bool SimulationProtocol(sf::Packet packet, sf::Packet* _correctionPacket) {
-	auto type = 0;
-	packet >> type;
-	std::cout << "Simulating packet type: " << type << std::endl;
-	return true;
+	int intHead;
+	packet >> intHead;
+	HeaderUDP head = (HeaderUDP)intHead;
+
+	switch (head)
+	{
+	case MOVE:
+		///Receive the new pos of the player and send to all. 
+		float x, y;
+		packet >> x >> y;
+		std::cout << x << y << std::endl;
+		break;
+	case UPDATE_POSITIONSUDP:
+		///Update the player position of all the players. 
+		break;
+	}
 }
 
 int main()
 {
 	//PlayerInfo playerInfo;
 	//TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
-	UDP_SERVER.Run(UDPTestingProtocol, SimulationProtocol, 50000);
+	UDP_SERVER.Run(UDPTestingProtocol, 50000);
 	bool startGame = false;
 	int currentPlayersJoined;
 	//Partida

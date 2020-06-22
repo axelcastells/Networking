@@ -58,13 +58,11 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	Header head = (Header)intHead;
 
 	//Nom�s missatges rebuts, respostes al main.
-	//Nom�s missatges rebuts, respostes al main.
 	switch (head)
 	{
 	case START:
-	
 		startGame = true;
-		
+		/*
 		// Missatge rebut per comen�ar la partida
 		//DESMONTAR PACKET -> <START>_<NPLAYERS>_<PLAYERID>_<PLAYERPOSITIONS>
 							//_<GIVENCARDS>_<IDSCARTES>
@@ -81,23 +79,23 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			packet >> _color; // PLAYERID
 
 			// Asignar la ID al jugador.
-			player.SetColor((PlayerInfo::Color)_color);
+			players[i].SetColor((PlayerInfo::Color)_color);
 
 			//Asignar la posici� inicial al jugador.
 			packet >> positionX >> positionY; //PLAYERPOSITIONS
 
 			player.SetPosition(positionX, positionY);
-			std::cout << "El jugador " << (int)player.GetColor() << " comenca en la posicio X: " << player.GetPosition().x << " Y: " << player.GetPosition().y << std::endl;
+			std::cout << "El jugador " << (int)players[i].GetColor() << " comen�a en la posici� X: " << players[i].GetPosition().x << " Y: " << players[i].GetPosition().y << std::endl;
 			players.push_back(player);
 		}
 
 		// Assignar les posicions amb el vector com hem fet amb el color
 		//packet >> playerInfo.position;
-		packet >> size;
+		
 		// Cartes rebudes
 		packet >> size; //GIVENCARDS quantes cartes rebo
 
-		std::cout << "Has rebut " << size << " Cartes" << std::endl;
+		std::cout << "Has rebut %d " << size << " Cartes" << std::endl;
 		for (int i = 0; i < size; i++)
 		{
 			packet >> receivedCard; //IDCARTES
@@ -196,7 +194,7 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 			}
 
 		}
-		
+		*/
 		packet.clear();
 		break;
 
@@ -349,20 +347,32 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 
 //UDP PROTOCOLS
 void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
-	sf::Packet commandPacket;
-	commandPacket << 999;
-	//UDP_CLIENT.AddCommand(commandPacket);
+
+	int intHead;
+	packet >> intHead;
+	HeaderUDP head = (HeaderUDP)intHead;
+
+	switch (head)
+	{
+		case MOVE:
+			///Send the new position to the player
+			
+			break;
+		case UPDATE_POSITIONSUDP:
+			///Update the player position of all the players. 
+			break;
+	}
+
 }
 
-int Run() {
-	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-	//sf::Packet connectPacket;
-	//connectPacket << 0;
-	//TCP_CLIENT.Send(connectPacket);
-	return 0;
-}
+//int Run() {
+//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+//	sf::Packet connectPacket;
+//	connectPacket << 111;
+//	//TCP_CLIENT.Send(connectPacket);
+//	return 0;
+//}
 
 std::string folder = "images/";
 
@@ -408,17 +418,17 @@ void Cluedo()
 	AddSprite("SALA.png", sf::Vector2f(530, 520), scaleRooms);
 	///
 
-	/*std::vector<std::string> names = AssetManager::GetNames();
+	std::vector<std::string> names = AssetManager::GetNames();
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::cout << names[i] << std::endl;
-	}*/
+	}
 	//Init(); //Despues de la creacion de la ventana y propiedades. 
 
 	///PLAYER COMENTADO
-	Player *player = new Player();
-	player->SetScale(sf::Vector2f(0.5f, 0.5f));
-	player->SetPos(sf::Vector2f(10, 50));
+	//PlayerCLUEDO *player = new PlayerCLUEDO();
+	//player->SetScale(sf::Vector2f(0.5f, 0.5f));
+	//player->SetPos(sf::Vector2f(10, 50));
 
 
 	sf::Clock clock;
@@ -442,7 +452,7 @@ void Cluedo()
 				break;
 
 			case sf::Event::KeyPressed:
-				if (event.key.code == sf::Keyboard::Up)
+				/*if (event.key.code == sf::Keyboard::Up)
 				{
 					sf::Vector2f playerPos = player->GetPos();
 					player->SetPos(
@@ -472,28 +482,28 @@ void Cluedo()
 					player->SetPos(
 						sf::Vector2f(playerPos.x + 260, playerPos.y)
 					);
-				}
+				}*/
 
 				break;
 			}
 		}
 		//2. Update.
 		///Constraints 
-		sf::Vector2f playerPos = player->GetPos();
-		if (playerPos.y < 0)
-			player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
-		if (playerPos.y > 520)
-			player->SetPos(sf::Vector2f(playerPos.x, 520));
-		if (playerPos.x < 0)
-			player->SetPos(sf::Vector2f(0.0f, playerPos.y));
-		if (playerPos.x > 530)
-			player->SetPos(sf::Vector2f(530, playerPos.y));
+		//sf::Vector2f playerPos = player->GetPos();
+		//if (playerPos.y < 0)
+		//	player->SetPos(sf::Vector2f(playerPos.x, 0.0f));
+		//if (playerPos.y > 520)
+		//	player->SetPos(sf::Vector2f(playerPos.x, 520));
+		//if (playerPos.x < 0)
+		//	player->SetPos(sf::Vector2f(0.0f, playerPos.y));
+		//if (playerPos.x > 530)
+		//	player->SetPos(sf::Vector2f(530, playerPos.y));
 
 		//3. Clear. 
 		window.clear(sf::Color::Black);
 		//4. Draw or Render: Dibjar objetos creados. 
 		AssetManager::DrawAllSprites(&window);
-		player->DrawPlayer(&window);
+		//player->DrawPlayer(&window);
 		window.display(); // Ultimo metodo a llamar. 
 	}
 }
@@ -505,24 +515,36 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x, player->GetPos().y - velocity)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) //Smooth movement.
 	{
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x, player->GetPos().y + velocity)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) //Smooth movement.
 	{
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x - velocity, player->GetPos().y)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) //Smooth movement.
 	{
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x + velocity, player->GetPos().y)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 }
 
@@ -611,29 +633,17 @@ int main()
 
 	//Connect a Servidor
 
-	sf::Packet commandPacket;
-	commandPacket << 999;
-	//std::cout << commandPacket << std::endl;
-	//while (true) {
-
-	UDP_CLIENT.AddCommand(commandPacket);
-	//UDP_CLIENT.AddCommand(commandPacket);
-	//UDP_CLIENT.AddCommand(commandPacket);
-	//}
-
 	///PARTIDA
-	//Cluedo();
-	//NerverSplit();
+	/*Cluedo();*/
+	NerverSplit();
 
 	//Partida
-	while (!startGame)
-	{
-		//Esperant jugadors a la partida
+	//while (!startGame)
+	//{
+	//	//Esperant jugadors a la partida
 
-	};
+	//};
 	
-	///PARTIDA
-	Cluedo();
 	//g.DrawDungeon();
 
 
