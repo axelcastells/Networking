@@ -89,13 +89,15 @@ namespace Network {
 			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 
 			void AddCommand(sf::Packet _commandPacket);
-
+			unsigned int GetID();
 			void Send(sf::Packet _packet);
 		private:
 			Client();
 			bool isRunning;
 			void ManageSocket();
 			void Pong();
+
+			unsigned int clientId;
 
 			unsigned int saltChecksum;
 			unsigned int clientSalt;

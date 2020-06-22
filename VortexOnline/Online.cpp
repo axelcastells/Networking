@@ -741,7 +741,7 @@ void Network::UDP::Server::ManageSocketsThread()
 					std::cout << "Added new connection with id [" << newUid << "] and salt checksum [" << dir.salt << "]" << std::endl;
 
 					sf::Packet welcomePacket;
-					welcomePacket << (int)UDP_SYSTEM_MESSAGE::HELLO;
+					welcomePacket << (int)UDP_SYSTEM_MESSAGE::HELLO << newUid;
 					Send(welcomePacket, dir);
 				}
 
@@ -1006,6 +1006,9 @@ void UDP::Client::ManageSocket() {
 			//If true, this is a ping packet!
 			if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::HELLO) {
 				potentialSystemPacket >> serverSalt;
+
+				potentialSystemId >> clientId;
+
 				std::cout << "Got WELCOME from server!" << std::endl;
 				saltChecksum = (clientSalt & serverSalt);
 			}
