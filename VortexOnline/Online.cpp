@@ -609,6 +609,8 @@ void Network::UDP::Server::ManageAccumulatedCommands()
 
 			while (!it->second.empty()) {
 				sf::Packet packet = it->second.front();
+				it->second.pop();
+
 				auto message = 0;
 				
 				packet >> length;
@@ -627,8 +629,6 @@ void Network::UDP::Server::ManageAccumulatedCommands()
 						noAckPacket << (int)UDP_SYSTEM_MESSAGE::NO_ACK_COMMAND;
 
 						correctionPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
-						int packetMessageTag;
-
 
 						auto nextMessage = 0;
 						while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
@@ -703,15 +703,20 @@ void Network::UDP::Server::ManageSocketsThread()
 				if (GetConnectionData(id, &data)) {
 					if ((clientSalt & serverSalt) == data->salt) {
 
-						pack << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						potentialSystemPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
 						sf::Packet newPacket;
 						//newPacket << potentialSystemMessageId;
 
 						auto nextMessage = 0;
-						while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
-							pack >> nextMessage;
-							newPacket << nextMessage;
-							std::cout << "Received ACCUMULATED commands: " << nextMessage << std::endl;
+						while (true) {
+							potentialSystemPacket >> nextMessage;
+							if (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+								newPacket << nextMessage;
+								//std::cout << "Received ACCUMULATED commands: " << nextMessage << std::endl;
+							} 
+							else {
+								break;
+							}
 						}
 
 						accumulatedCommands[id].push(newPacket);
@@ -892,6 +897,7 @@ void Network::UDP::Client::Send(sf::Packet _packet)
 
 UDP::Client::Client() {
 	isRunning = false;
+	accumulatedCommands = std::map<unsigned int, sf::Packet>();
 }
 
 void UDP::Client::Pong()
@@ -928,11 +934,13 @@ void Network::UDP::Client::ManageAccumulatedCommands()
 	while (isRunning) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(accumulatedCommandMillis));
 
-		sf::Packet newCommand;
-		newCommand << 765;
-		AddCommand(newCommand);
-
-		SendAccumulatedCommands();
+		//DEBUG
+		//sf::Packet newCommand;
+		//newCommand << 765;
+		//AddCommand(newCommand);
+		//----
+		if(accumulatedCommands.size() > 0)
+			SendAccumulatedCommands();
 	}
 }
 
@@ -940,6 +948,8 @@ void Network::UDP::Client::SendAccumulatedCommands()
 {
 	sf::Packet newPacket;
 	newPacket << (int)UDP_SYSTEM_MESSAGE::ACCUM_COMMANDS_ID << (int)accumulatedCommands.size();
+
+	bool existingAccumulatedCommands = false;
 
 	sf::Packet currentPacket;
 	for (auto it = accumulatedCommands.begin(); it != accumulatedCommands.end(); it++) {
@@ -975,9 +985,6 @@ void UDP::Client::CriticalPacketsManager()
 	}
 }
 
-void UDP::Client::ValidateCommand(unsigned int _commandId) {
-	accumulatedCommands.erase(accumulatedCommands.begin(), accumulatedCommands.find(_commandId));
-}
 void UDP::Client::AddCommand(sf::Packet _commandPacket) {
 	_commandPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_COMMAND;
 	_commandPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;

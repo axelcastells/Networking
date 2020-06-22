@@ -28,7 +28,6 @@ namespace Network {
 			static Server &Instance();
 			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), bool(*simulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
-			void Shutdown();
 			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
 			
@@ -89,7 +88,6 @@ namespace Network {
 			unsigned int AddCriticalPacket(sf::Packet _pack);
 			void RemoveCriticalPacket(unsigned int _criticalPacketId);
 
-			void ValidateCommand(unsigned int _commandId);
 			void AddCommand(sf::Packet _commandPacket);
 
 			void Send(sf::Packet _packet);

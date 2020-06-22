@@ -355,11 +355,12 @@ void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 }
 
 int Run() {
-	TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
+	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
+	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
 	//UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-	sf::Packet connectPacket;
-	connectPacket << 0;
-	TCP_CLIENT.Send(connectPacket);
+	//sf::Packet connectPacket;
+	//connectPacket << 0;
+	//TCP_CLIENT.Send(connectPacket);
 	return 0;
 }
 
@@ -601,21 +602,22 @@ int main()
 	std::cin >> nickname;
 	//loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
-	
+
+	Run();
+
 	//TEST AQUI
 	/*hand.push_back(carta(CHARACTER, "Mora", 6));
 	std::cout << "Carta 1: " << hand[0].Cardname << std::endl;*/
-	
 
 	//Connect a Servidor
-	std::thread clientThread(Run);
-	clientThread.join();
 
 	sf::Packet commandPacket;
-	commandPacket << 75;
+	commandPacket << 999;
 	//std::cout << commandPacket << std::endl;
 	//while (true) {
 
+	UDP_CLIENT.AddCommand(commandPacket);
+	//UDP_CLIENT.AddCommand(commandPacket);
 	//UDP_CLIENT.AddCommand(commandPacket);
 	//}
 

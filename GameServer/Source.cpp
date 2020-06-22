@@ -117,12 +117,7 @@ std::list<carta> DefinirResultat(std::list<carta> &baraja)
 	
 }
 
-bool SimulationProtocol(sf::Packet packet, sf::Packet* _correctionPacket) {
-	auto type = 0;
-	packet >> type;
-	std::cout << "Simulating packet type: " << type << std::endl;
-	return true;
-}
+
 
 
 //TCP Protocols
@@ -243,11 +238,18 @@ void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Pa
 	//}
 }
 
+bool SimulationProtocol(sf::Packet packet, sf::Packet* _correctionPacket) {
+	auto type = 0;
+	packet >> type;
+	std::cout << "Simulating packet type: " << type << std::endl;
+	return true;
+}
+
 int main()
 {
 	//PlayerInfo playerInfo;
-	TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
-	//UDP_SERVER.Run(UDPTestingProtocol, 50000);
+	//TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
+	UDP_SERVER.Run(UDPTestingProtocol, SimulationProtocol, 50000);
 	bool startGame = false;
 	int currentPlayersJoined;
 	//Partida
