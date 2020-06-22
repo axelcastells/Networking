@@ -524,18 +524,27 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x, player->GetPos().y + velocity)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) //Smooth movement.
 	{
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x - velocity, player->GetPos().y)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) //Smooth movement.
 	{
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x + velocity, player->GetPos().y)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 }
 

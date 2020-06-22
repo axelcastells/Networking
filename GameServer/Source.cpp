@@ -3,6 +3,7 @@
 #include <SFML\Graphics.hpp>
 #include <SFML\Network.hpp>
 #include <PlayerInfo.h>
+#include <Player.h>
 #include "VortexOnline.h"
 #include "Protocol.h"
 
@@ -12,6 +13,7 @@ int dado1, dado2;
 std::list<carta> baraja, resultat;
 
 std::vector<PlayerInfo> players;
+std::vector<Player> playersUDP;
 std::list<sf::TcpSocket*>::iterator currentPlayer;
 int currentPlayer_id;
 sf::Packet packet;
@@ -118,31 +120,31 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 }
 
 //UDP Protocols
-void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet) 
-{
-	//server.
-	//unsigned int id;
-	//if (server.GetConnectionId(dir, id)) {
-	//	server.RemoveCriticalPacket()
-	//}
-
-	int intHead;
-	packet >> intHead;
-	HeaderUDP head = (HeaderUDP)intHead;
-
-	switch (head)
-	{
-	case MOVE:
-		break;
-	case UPDATE_POSITIONSUDP:
-		///Send the new players positions to the others.
-		break;
-	case STARTUDP:
-		///Recivir la ip puerto de cliente existente o nuevo. 
-		break;
-	}
-
-}
+//void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet) 
+//{
+//	//server.
+//	//unsigned int id;
+//	//if (server.GetConnectionId(dir, id)) {
+//	//	server.RemoveCriticalPacket()
+//	//}
+//
+//	int intHead;
+//	packet >> intHead;
+//	HeaderUDP head = (HeaderUDP)intHead;
+//
+//	switch (head)
+//	{
+//	case MOVE:
+//		break;
+//	case UPDATE_POSITIONSUDP:
+//		///Send the new players positions to the others.
+//		break;
+//	case STARTUDP:
+//		///Recivir la ip puerto de cliente existente o nuevo. 
+//		break;
+//	}
+//
+//}
 
 //roomindex > 0 esta dins d'una sala.
 
@@ -364,18 +366,30 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 //UDP Protocols
 void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Packet &packet)
 {
-	//server.
-	//unsigned int id;
-	//if (server.GetConnectionId(dir, id)) {
-	//	server.RemoveCriticalPacket()
-	//}
+
+	int intHead;
+	packet >> intHead;
+	HeaderUDP head = (HeaderUDP)intHead;
+
+	switch (head)
+	{
+	case MOVE:
+		///Receive the new pos of the player and send to all. 
+		float x, y;
+		packet >> x >> y;
+		std::cout << x << y << std::endl;
+		break;
+	case UPDATE_POSITIONSUDP:
+		///Update the player position of all the players. 
+		break;
+	}
 }
 
 int main()
 {
 	//PlayerInfo playerInfo;
-	TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
-	//UDP_SERVER.Run(UDPTestingProtocol, 50000);
+	//TCP_SERVER.Run(TCPProtocol, 50000, 4, 3);
+	UDP_SERVER.Run(UDPTestingProtocol, 50000);
 	bool startGame = false;
 	int currentPlayersJoined;
 	//Partida
