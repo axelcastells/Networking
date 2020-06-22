@@ -34,9 +34,8 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 
 	switch (head)
 	{
-		//Arriba un client nou per jugar
+	//Arriba un client nou per jugar
 	case CONNECT:
-
 		if (roomIndex == -1 && TCP_SERVER.RoomsCount() == 0) { //El jugador esta a la llista d'espera i no hi ha sales creades
 			TCP_SERVER.CreateRoom(TCP_SERVER.GetMaxPlayersRoom());
 			TCP_SERVER.JoinRoom(socketIndex, 0);
@@ -126,6 +125,23 @@ void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Pa
 	//if (server.GetConnectionId(dir, id)) {
 	//	server.RemoveCriticalPacket()
 	//}
+
+	int intHead;
+	packet >> intHead;
+	HeaderUDP head = (HeaderUDP)intHead;
+
+	switch (head)
+	{
+	case MOVE:
+		break;
+	case UPDATE_POSITIONSUDP:
+		///Send the new players positions to the others.
+		break;
+	case STARTUDP:
+		///Recivir la ip puerto de cliente existente o nuevo. 
+		break;
+	}
+
 }
 
 //roomindex > 0 esta dins d'una sala.

@@ -348,6 +348,21 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 //UDP PROTOCOLS
 void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
+	int intHead;
+	packet >> intHead;
+	HeaderUDP head = (HeaderUDP)intHead;
+
+	switch (head)
+	{
+		case MOVE:
+			///Send the new position to the player
+			
+			break;
+		case UPDATE_POSITIONSUDP:
+			///Update the player position of all the players. 
+			break;
+	}
+
 }
 
 //int Run() {
@@ -500,6 +515,9 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 		/*std::cout << "Key F" << std::endl;*/player->SetPos(
 			sf::Vector2f(player->GetPos().x, player->GetPos().y - velocity)
 		);
+		sf::Packet packet;
+		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.Send(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) //Smooth movement.
 	{
