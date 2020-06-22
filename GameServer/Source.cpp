@@ -385,6 +385,7 @@ bool SimulationProtocol(Network::UDP::Server &_server, unsigned int _playerId, s
 
 	int command;
 	packet >> command;
+	packet >> command;
 	UDPGameCommands currentCommand = (UDPGameCommands)command;
 	bool result = true;
 	
@@ -395,7 +396,7 @@ bool SimulationProtocol(Network::UDP::Server &_server, unsigned int _playerId, s
 	case MOVE_COMMAND:
 		packet >> newPos.x;
 		packet >> newPos.y;
-
+		std::cout << "Move Command Received!" << std::endl;
 		if (newPos.x > 1000 || newPos.x < 0 || newPos.y > 1000 || newPos.y < 0) {
 			float x = clamp(newPos.x, 0, 1000);
 			float y = clamp(newPos.y, 0, 1000);

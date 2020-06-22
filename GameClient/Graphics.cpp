@@ -64,9 +64,6 @@ void Graphics::DrawDungeon(std::map<unsigned int, sf::RectangleShape> playerShap
 					packet << (int)UDPGameCommands::MOVE_COMMAND << playerId << playerShapes[playerId].getPosition().x << playerShapes[playerId].getPosition().y;
 					UDP_CLIENT.AddCommand(packet);
 					std::cout << "LEFT\n";
-
-					std::cout<< "FUCKING POSITION" << playerShapes[playerId].getPosition().x<< playerShapes[playerId].getPosition().y << std::endl;
-
 				}
 				else if (event.key.code == sf::Keyboard::Up)
 				{

@@ -629,8 +629,9 @@ void Network::UDP::Server::ManageAccumulatedCommands()
 				sf::Packet packet = it->second.front();
 				it->second.pop();
 
-				float message = 0;
+				auto message = 0;
 				
+				packet >> length;
 				packet >> length;
 
 				for (int i = 0; i < length; i++) {
@@ -734,6 +735,7 @@ void Network::UDP::Server::ManageSocketsThread()
 			else if (potentialSystemMessageId == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID) {
 				potentialSystemPacket >> clientSalt;
 				int challengeAnswer;
+				potentialSystemPacket >> challengeAnswer;
 				potentialSystemPacket >> challengeAnswer;
 
 				if (challengeAnswer == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ANSWER) {
