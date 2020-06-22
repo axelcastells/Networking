@@ -75,7 +75,7 @@ void TCPProtocol(Network::TCP::Server &server, sf::Packet& packet, int roomIndex
 		break;
 
 		
-	case MOVE:
+	case Header::MOVE:
 
 		break;
 
@@ -144,8 +144,6 @@ void UDPTestingProtocol(Network::UDP::Server &server, ConnectionData dir, sf::Pa
 
 }
 
-=======
->>>>>>> 3675e7318cd6a9150f0e2660c7fb704ca0f7a4b4
 //roomindex > 0 esta dins d'una sala.
 
 //Funcions del joc controlades pel servidor
