@@ -10,7 +10,7 @@ public:
 	}
 	unsigned int NewId() { return _id++; }
 private:
-	IDGenerator() : _id(0) {}
+	IDGenerator() : _id(1) {}
 
 	unsigned int _id;
 };

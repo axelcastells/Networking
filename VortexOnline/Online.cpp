@@ -597,6 +597,76 @@ void Network::UDP::Server::Debug()
 	}
 }
 
+void Network::UDP::Server::ManageAccumulatedCommands()
+{
+	while (isRunning) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(ACCUMULATED_COMANDS_MILLIS));
+
+		for (auto it = accumulatedCommands.begin(); it != accumulatedCommands.end(); it++) {
+			
+			unsigned int lastValidId = 0;
+			auto length = 0;
+
+			while (!it->second.empty()) {
+				sf::Packet packet = it->second.front();
+				auto message = 0;
+				
+				packet >> length;
+
+				for (int i = 0; i < length; i++) {
+
+					sf::Packet newPacket;
+					while (message != (int)UDP_SYSTEM_MESSAGE::END_OF_COMMAND) {
+						packet >> message;
+						newPacket << message;
+					}
+
+					sf::Packet correctionPacket;
+					if (!SimulationProtocol(newPacket, &correctionPacket)) {
+						sf::Packet noAckPacket;
+						noAckPacket << (int)UDP_SYSTEM_MESSAGE::NO_ACK_COMMAND;
+
+						correctionPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						int packetMessageTag;
+
+
+						auto nextMessage = 0;
+						while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+							correctionPacket >> nextMessage;
+							noAckPacket << nextMessage;
+						}
+
+						ConnectionData* data;
+						if (GetConnectionData(it->first, &data)) {
+
+							Send(correctionPacket, *data);
+
+							break;
+						}
+
+					}
+					else {
+
+						newPacket >> lastValidId;
+					}
+				}
+
+				if (lastValidId > 0) {
+					ConnectionData* data;
+					if (GetConnectionData(it->first, &data)) {
+						sf::Packet ackPacket;
+						ackPacket << (int)UDP_SYSTEM_MESSAGE::ACK_COMMAND << lastValidId;
+						
+						Send(ackPacket, *data);
+					}
+				}
+
+				it->second = std::queue<sf::Packet>();
+			}
+		}
+	}
+}
+
 void Network::UDP::Server::ManageSocketsThread()
 {
 	while (isRunning) {
@@ -621,6 +691,32 @@ void Network::UDP::Server::ManageSocketsThread()
 					sf::Packet challengePacket;
 					challengePacket << (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID << (int)UDP_SYSTEM_MESSAGE::CHALLENGE_QUESTION;
 					challengePacketId = AddCriticalPacket(dir, challengePacket);
+				}
+			}
+			else if (potentialSystemMessageId == (int)UDP_SYSTEM_MESSAGE::ACCUM_COMMANDS_ID) {
+				potentialSystemPacket >> clientSalt;
+
+				unsigned int id;
+				GetConnectionId(dir, id);
+				ConnectionData* data;
+
+				if (GetConnectionData(id, &data)) {
+					if ((clientSalt & serverSalt) == data->salt) {
+
+						pack << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						sf::Packet newPacket;
+						//newPacket << potentialSystemMessageId;
+
+						auto nextMessage = 0;
+						while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+							pack >> nextMessage;
+							newPacket << nextMessage;
+							std::cout << "Received ACCUMULATED commands: " << nextMessage << std::endl;
+						}
+
+						accumulatedCommands[id].push(newPacket);
+
+					}
 				}
 			}
 			else if (potentialSystemMessageId == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID) {
@@ -666,6 +762,7 @@ void Network::UDP::Server::ManageSocketsThread()
 				}
 
 			}
+			//ANY OTHER GAME PACKET
 			else {
 				potentialSystemPacket >> clientSalt;
 
@@ -678,12 +775,12 @@ void Network::UDP::Server::ManageSocketsThread()
 					{
 						//pack << potentialSystemMessageId << potentialSystemPacket;
 
-						pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+						pack << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
 						sf::Packet newPacket;
 						newPacket << potentialSystemMessageId;
 
 						auto nextMessage = 0;
-						while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+						while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
 							pack >> nextMessage;
 							newPacket << nextMessage;
 						}
@@ -724,7 +821,7 @@ void Network::UDP::Server::ManageDisconnections()
 	}
 }
 
-void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
+void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), bool(*simulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket), short _port, unsigned int criticTimer, unsigned int pingTime, unsigned int _disconnectPingCycles, bool debug) {
 	
 	std::cout << "[UDP SERVER] Insert a bunch of random numbers ( /!\ ONLY NUMBERS /!\ ) and press ENTER." << std::endl;
 	std::cin >> serverSalt;
@@ -738,17 +835,20 @@ void UDP::Server::Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf
 		std::cout << "Can't bind port!" << std::endl;
 	}
 	FunctionProtocol = funcProtocol;
-	
+	SimulationProtocol = simulationProtocol;
+
 	isRunning = true;
 	std::thread runServerThread(&Server::ManageSocketsThread, this);
 	std::thread manageDisconnect(&Server::ManageDisconnections, this);
 	std::thread managePingPong(&Server::Ping, this);
 	std::thread manageCriticalPackets(&Server::CriticalPacketsManager, this);
+	std::thread accumulatedCommandsThread(&Server::ManageAccumulatedCommands, this);
 
 	runServerThread.detach();
 	manageDisconnect.detach();
 	managePingPong.detach();
 	manageCriticalPackets.detach();
+	accumulatedCommandsThread.detach();
 
 	if (debug) {
 		std::thread debugThread(&Server::Debug, this);
@@ -775,14 +875,14 @@ UDP::Client& UDP::Client::Instance()
 
 void Network::UDP::Client::Send(sf::Packet _packet)
 {
-	_packet << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+	_packet << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
 	int packetMessageTag;
 	_packet >> packetMessageTag;
 	sf::Packet newPacket;
 	newPacket << packetMessageTag << clientSalt;
 
 	auto nextMessage = 0;
-	while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+	while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
 		_packet >> nextMessage;
 		newPacket << nextMessage;
 	}
@@ -804,14 +904,14 @@ void UDP::Client::Pong()
 unsigned int Network::UDP::Client::AddCriticalPacket(sf::Packet _pack)
 {
 	unsigned int uid = NEW_UID;
-	_pack << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+	_pack << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
 	int packetMessageTag;
 	_pack >> packetMessageTag;
 	sf::Packet newPacket;
 	newPacket << packetMessageTag << clientSalt;
 
 	auto nextMessage = 0;
-	while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+	while (nextMessage != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
 		_pack >> nextMessage;
 		newPacket << nextMessage;
 	}
@@ -821,6 +921,44 @@ unsigned int Network::UDP::Client::AddCriticalPacket(sf::Packet _pack)
 
 void Network::UDP::Client::RemoveCriticalPacket(unsigned int _criticalPacketId) {
 	criticalPackets.erase(_criticalPacketId);
+}
+
+void Network::UDP::Client::ManageAccumulatedCommands()
+{
+	while (isRunning) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(accumulatedCommandMillis));
+
+		sf::Packet newCommand;
+		newCommand << 765;
+		AddCommand(newCommand);
+
+		SendAccumulatedCommands();
+	}
+}
+
+void Network::UDP::Client::SendAccumulatedCommands()
+{
+	sf::Packet newPacket;
+	newPacket << (int)UDP_SYSTEM_MESSAGE::ACCUM_COMMANDS_ID << (int)accumulatedCommands.size();
+
+	sf::Packet currentPacket;
+	for (auto it = accumulatedCommands.begin(); it != accumulatedCommands.end(); it++) {
+		newPacket << it->first;
+		
+		currentPacket = it->second;
+
+		auto message = 0;
+		while (message != (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+			currentPacket >> message;
+			newPacket << message;
+			std::cout << message << std::endl;
+		}
+		
+		commandsWaitingForAck[it->first] = newPacket;
+	}
+	accumulatedCommands.clear();
+	Send(newPacket);
+
 }
 
 void UDP::Client::SendCriticalPackets() {
@@ -835,6 +973,15 @@ void UDP::Client::CriticalPacketsManager()
 		std::this_thread::sleep_for(std::chrono::milliseconds(criticalPacketMillis));
 		SendCriticalPackets();
 	}
+}
+
+void UDP::Client::ValidateCommand(unsigned int _commandId) {
+	accumulatedCommands.erase(accumulatedCommands.begin(), accumulatedCommands.find(_commandId));
+}
+void UDP::Client::AddCommand(sf::Packet _commandPacket) {
+	_commandPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_COMMAND;
+	_commandPacket << (int)UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+	accumulatedCommands[NEW_UID] = _commandPacket;
 }
 
 void UDP::Client::ManageSocket() {
@@ -854,6 +1001,44 @@ void UDP::Client::ManageSocket() {
 				potentialSystemPacket >> serverSalt;
 				std::cout << "Got WELCOME from server!" << std::endl;
 				saltChecksum = (clientSalt & serverSalt);
+			}
+			else if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::ACK) {
+				potentialSystemPacket >> serverSalt;
+				if ((serverSalt & clientSalt) == saltChecksum) {
+					
+				}
+			}
+			else if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::ACK_COMMAND) {
+				potentialSystemPacket >> serverSalt;
+				if ((serverSalt & clientSalt) == saltChecksum) {
+					unsigned int commandId;
+					potentialSystemPacket >> commandId;
+
+					commandsWaitingForAck.erase(commandsWaitingForAck.begin(), commandsWaitingForAck.find(commandId));
+				}
+			}
+			else if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::NO_ACK_COMMAND) {
+				potentialSystemPacket >> serverSalt;
+				if ((serverSalt & clientSalt) == saltChecksum) {
+					unsigned int commandId;
+					potentialSystemPacket >> commandId;
+
+
+
+					packet << UDP_SYSTEM_MESSAGE::END_OF_PACKET;
+					sf::Packet newPacket;
+					newPacket << potentialSystemId;
+
+					auto nextMessage = 0;
+					while (nextMessage != UDP_SYSTEM_MESSAGE::END_OF_PACKET) {
+						packet >> nextMessage;
+						newPacket << nextMessage;
+					}
+
+					commandsWaitingForAck.erase(commandsWaitingForAck.find(commandId), commandsWaitingForAck.end());
+
+					FunctionProtocol(Instance(), potentialSystemPacket);
+				}
 			}
 			else if (potentialSystemId == (int)UDP_SYSTEM_MESSAGE::CHALLENGE_ID) {
 				RemoveCriticalPacket(helloPacketId);
@@ -895,13 +1080,13 @@ void UDP::Client::ManageSocket() {
 	}
 }
 
-void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis)
+void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf::IpAddress _ip, unsigned short _serverPort, unsigned int _criticalPacketMillis, unsigned int _accumulatedCommandMillis)
 {
 	criticalPacketMillis = _criticalPacketMillis;
 	FunctionProtocol = funcProtocol;
 	serverIp = _ip;
 	serverPort = _serverPort;
-
+	accumulatedCommandMillis = _accumulatedCommandMillis;
 	
 	socketToBootstrapServer.bind(sf::IpAddress::getLocalAddress().toInteger());
 
@@ -920,8 +1105,10 @@ void UDP::Client::Run(void(*funcProtocol)(Client &client, sf::Packet &_pack), sf
 	isRunning = true;
 	std::thread mainThread(&UDP::Client::ManageSocket, this);
 	std::thread criticalPacketsThread(&UDP::Client::CriticalPacketsManager, this);
+	std::thread accumPacketsThread(&UDP::Client::ManageAccumulatedCommands, this);
 	mainThread.detach();
 	criticalPacketsThread.detach();
+	accumPacketsThread.detach();
 }
 
 #pragma endregion
