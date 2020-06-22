@@ -991,6 +991,11 @@ void UDP::Client::AddCommand(sf::Packet _commandPacket) {
 	accumulatedCommands[NEW_UID] = _commandPacket;
 }
 
+unsigned int Network::UDP::Client::GetID()
+{
+	return clientId;
+}
+
 void UDP::Client::ManageSocket() {
 	while (isRunning) {
 		sf::Packet packet;
