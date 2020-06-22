@@ -13,6 +13,8 @@
 #include <AssetManager.h>
 
 
+
+bool gameStarted = false;
 //Client local setup
 PlayerInfo playerInfo;
 sf::TcpSocket serverSocket;
@@ -21,6 +23,8 @@ bool startGame = false;
 int maxPlayers;
 int currentPlayersJoined;
 std::vector<PlayerInfo> players;
+std::map<unsigned int, sf::RectangleShape> playersUDP;
+
 std::vector<std::string> packets;
 
 int positionX, positionY;
@@ -345,34 +349,8 @@ void TCPProtocol(Network::TCP::Client &client, sf::Packet &packet) {
 	}
 }
 
-//UDP PROTOCOLS
-void UDPTestingProtocol(Network::UDP::Client &client, sf::Packet &packet) {
 
-	int intHead;
-	packet >> intHead;
-	HeaderUDP head = (HeaderUDP)intHead;
 
-	switch (head)
-	{
-		case MOVE:
-			///Send the new position to the player
-			
-			break;
-		case UPDATE_POSITIONSUDP:
-			///Update the player position of all the players. 
-			break;
-	}
-
-}
-
-//int Run() {
-//	//TCP_CLIENT.Run(TCPProtocol, "localhost", 50000);
-//	UDP_CLIENT.Run(UDPTestingProtocol, "localhost", 50000);
-//	sf::Packet connectPacket;
-//	connectPacket << 111;
-//	//TCP_CLIENT.Send(connectPacket);
-//	return 0;
-//}
 
 std::string folder = "images/";
 
@@ -516,8 +494,8 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 			sf::Vector2f(player->GetPos().x, player->GetPos().y - velocity)
 		);
 		sf::Packet packet;
-		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
-		UDP_CLIENT.Send(packet);
+		packet << (int)UDPGameCommands::MOVE_COMMAND << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.AddCommand(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) //Smooth movement.
 	{
@@ -525,8 +503,8 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 			sf::Vector2f(player->GetPos().x, player->GetPos().y + velocity)
 		);
 		sf::Packet packet;
-		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
-		UDP_CLIENT.Send(packet);
+		packet << (int)UDPGameCommands::MOVE_COMMAND << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.AddCommand(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) //Smooth movement.
 	{
@@ -534,8 +512,8 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 			sf::Vector2f(player->GetPos().x - velocity, player->GetPos().y)
 		);
 		sf::Packet packet;
-		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
-		UDP_CLIENT.Send(packet);
+		packet << (int)UDPGameCommands::MOVE_COMMAND << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.AddCommand(packet);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) //Smooth movement.
 	{
@@ -543,20 +521,23 @@ void NerverSplitPlayerMovement(Player *player, float velocity)
 			sf::Vector2f(player->GetPos().x + velocity, player->GetPos().y)
 		);
 		sf::Packet packet;
-		packet << (int)MOVE << player->GetPos().x << player->GetPos().y;
-		UDP_CLIENT.Send(packet);
+		packet << (int)UDPGameCommands::MOVE_COMMAND << player->GetPos().x << player->GetPos().y;
+		UDP_CLIENT.AddCommand(packet);
 	}
 }
 
 void NerverSplit() 
 {
+	Player *player = new Player();
+	AssetManager manager;
+
 	sf::RenderWindow window(sf::VideoMode(1370, 765), "Game");
 	window.setFramerateLimit(60);
 
-	AssetManager manager;
+	
 
 	AddSprite("RoomUDP.png", sf::Vector2f(0, 0), sf::Vector2f(1, 1));
-	Player *player = new Player();
+
 	player->SetPos(sf::Vector2f(50.0f, 50.0f));
 	player->SetScale(sf::Vector2f(0.5f, 0.5f));
 	float velocity = 3.0f;
@@ -605,6 +586,10 @@ void NerverSplit()
 		player->DrawPlayer(&window);
 		player->MoveAllBullets();
 
+		//for (auto it = playersUDP.begin(); it != playersUDP.end(); it++) {
+		//	it->second.DrawPlayer(&window);
+		//}
+
 		for (int i = 0; i < player->bullets.size(); i++)
 		{
 			window.draw(player->bullets[i]);
@@ -616,16 +601,51 @@ void NerverSplit()
 
 }
 
+//UDP PROTOCOLS
+void UDPProtocol(Network::UDP::Client &client, sf::Packet &packet) {
+
+	int intHead;
+	packet >> intHead;
+	UDPGameProtocol head = (UDPGameProtocol)intHead;
+
+	switch (head)
+	{
+	case UDP_SYSTEM_MESSAGE::NO_ACK_COMMAND:
+		break;
+	case UDPGameCommands::MOVE_COMMAND:
+		unsigned int playerId;
+		packet >> playerId;
+		int x, y;
+		packet >> x >> y;
+			
+		playersUDP[playerId].setPosition(sf::Vector2f(x, y));
+
+
+		break;
+	default:
+		break;
+	}
+
+}
+
+void UDPClientMain() {
+
+	UDP_CLIENT.Run(UDPProtocol, "localhost", 50000);
+	NerverSplit();
+}
+
 int main()
 {
-	// INIT PLAYER
+	//UDPClientMain();
+	//// INIT PLAYER
 	std::string nickname;
 	std::cout << "Enter your nickname: " << std::endl;
 	std::cin >> nickname;
-	//loginPacket << "JOINED " << nickname;
+	////loginPacket << "JOINED " << nickname;
 	playerInfo.SetName(nickname);
 
-	Run();
+	//Run();
+	UDP_CLIENT.Run(UDPProtocol, "localhost", 50000);
 
 	//TEST AQUI
 	/*hand.push_back(carta(CHARACTER, "Mora", 6));
@@ -635,7 +655,7 @@ int main()
 
 	///PARTIDA
 	/*Cluedo();*/
-	NerverSplit();
+	//NerverSplit();
 
 	//Partida
 	//while (!startGame)
@@ -644,7 +664,7 @@ int main()
 
 	//};
 	
-	//g.DrawDungeon();
+	g.DrawDungeon(playersUDP);
 
 
 	return 0;

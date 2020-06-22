@@ -64,7 +64,7 @@ class Graphics
 	Sala centroMensajes;
 public:
 	Graphics();
-	void DrawDungeon();
+	void DrawDungeon(std::map<unsigned int, sf::RectangleShape> playerShapes);
 	~Graphics();
 };
 

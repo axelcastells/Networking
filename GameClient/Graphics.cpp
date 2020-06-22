@@ -1,5 +1,8 @@
 #include "Graphics.h"
 #include <iostream>
+#include <SFML/Network.hpp>
+#include "VortexOnline.h"
+#include "Protocol.h"
 
 
 Graphics::Graphics()
@@ -30,8 +33,10 @@ Graphics::Graphics()
 	centroMensajes.longitud.y = 6;
 }
 
-void Graphics::DrawDungeon()
+void Graphics::DrawDungeon(std::map<unsigned int, sf::RectangleShape> playerShapes)
 {
+	unsigned int playerId = UDP_CLIENT.GetID();
+
 	sf::RenderWindow _window(sf::VideoMode(800, 600), "Ventanita");
 	sf::RectangleShape shape(sf::Vector2f(SIZE, SIZE));
 	shape.setOutlineColor(sf::Color::Black);
@@ -54,18 +59,37 @@ void Graphics::DrawDungeon()
 				}
 				if (event.key.code == sf::Keyboard::Left)
 				{
+					playerShapes[playerId].setPosition(sf::Vector2f(playerShapes[playerId].getPosition().x - 3.0f, playerShapes[playerId].getPosition().y));
+					sf::Packet packet;
+					packet << (int)UDPGameCommands::MOVE_COMMAND << playerId << playerShapes[playerId].getPosition().x << playerShapes[playerId].getPosition().y;
+					UDP_CLIENT.AddCommand(packet);
 					std::cout << "LEFT\n";
+
+					std::cout<< "FUCKING POSITION" << playerShapes[playerId].getPosition().x<< playerShapes[playerId].getPosition().y << std::endl;
+
 				}
 				else if (event.key.code == sf::Keyboard::Up)
 				{
+					playerShapes[playerId].setPosition(sf::Vector2f(playerShapes[playerId].getPosition().x, playerShapes[playerId].getPosition().y - 3.0f));
+					sf::Packet packet;
+					packet << (int)UDPGameCommands::MOVE_COMMAND << playerId << playerShapes[playerId].getPosition().x << playerShapes[playerId].getPosition().y;
+					UDP_CLIENT.AddCommand(packet);
 					std::cout << "UP\n";
 				}
 				else if (event.key.code == sf::Keyboard::Right)
 				{
+					playerShapes[playerId].setPosition(sf::Vector2f(playerShapes[playerId].getPosition().x + 3.0f, playerShapes[playerId].getPosition().y));
+					sf::Packet packet;
+					packet << (int)UDPGameCommands::MOVE_COMMAND << playerId << playerShapes[playerId].getPosition().x << playerShapes[playerId].getPosition().y;
+					UDP_CLIENT.AddCommand(packet);
 					std::cout << "RIGTH\n";
 				}
 				else if (event.key.code == sf::Keyboard::Down)
 				{
+					playerShapes[playerId].setPosition(sf::Vector2f(playerShapes[playerId].getPosition().x, playerShapes[playerId].getPosition().y + 3.0f));
+					sf::Packet packet;
+					packet << (int)UDPGameCommands::MOVE_COMMAND << playerId << playerShapes[playerId].getPosition().x << playerShapes[playerId].getPosition().y;
+					UDP_CLIENT.AddCommand(packet);
 					std::cout << "DOWN\n";
 				}
 				break;
@@ -85,11 +109,16 @@ void Graphics::DrawDungeon()
 			}
 		}
 
-		for (size_t i = 0; i < salas.size(); i++)
-		{
-			salas[i].Draw(_window);
-			
+		for (auto it = playerShapes.begin(); it != playerShapes.end(); it++) {
+			it->second.setFillColor(sf::Color::Magenta);
+			_window.draw(it->second);
 		}
+
+		//for (size_t i = 0; i < salas.size(); i++)
+		//{
+		//	salas[i].Draw(_window);
+		//	
+		//}
 		centroMensajes.Draw(_window);
 
 		/*sf::Vector2f position;

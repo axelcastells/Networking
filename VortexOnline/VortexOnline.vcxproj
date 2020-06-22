@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Direction.h" />
+    <ClInclude Include="Functions.h" />
     <ClInclude Include="Online.h" />
     <ClInclude Include="Proxy.h" />
     <ClInclude Include="ServerRoom.h" />

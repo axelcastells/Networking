@@ -10,7 +10,17 @@
 #include "UniqueIdGenerator.h"
 #include "Proxy.h"
 
-enum UDP_SYSTEM_MESSAGE {PING, HELLO, CHALLENGE_ID, CHALLENGE_QUESTION, CHALLENGE_ANSWER, END_OF_PACKET, ACCUM_COMMANDS_ID, END_OF_COMMAND, ACK, ACK_COMMAND, NO_ACK_COMMAND};
+enum UDP_SYSTEM_MESSAGE {PING = 9000, 
+						HELLO = 9001, 
+						CHALLENGE_ID = 9002, 
+						CHALLENGE_QUESTION = 9003, 
+						CHALLENGE_ANSWER = 9004, 
+						END_OF_PACKET = 9005, 
+						ACCUM_COMMANDS_ID = 9006, 
+						END_OF_COMMAND = 9007, ACK = 9008, 
+						ACK_COMMAND = 9009, 
+						NO_ACK_COMMAND = 9010
+};
 //#define UDP_PING_ID 109619403579
 //#define UDP_HELLO_MESSAGE_ID 0
 //#define UDP_CHALLENGE_ID 90620269561985632
@@ -26,7 +36,7 @@ namespace Network {
 		class Server {
 		public:
 			static Server &Instance();
-			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), bool(*simulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
+			void Run(void(*funcProtocol)(Server &server, ConnectionData dir, sf::Packet& packet), bool(*simulationProtocol)(Server &_server, unsigned int _playerId, sf::Packet _packet, sf::Packet* _correctionPacket), short _port, unsigned int criticTimer = 1000, unsigned int pingTime = 1000, unsigned int _disconnectPingCycles = 3, bool debug = false);
 			void Stop();
 			bool GetConnectionData(unsigned int _userId, ConnectionData** dir);
 			bool GetConnectionId(const ConnectionData& proxy, unsigned int & id);
@@ -36,8 +46,11 @@ namespace Network {
 			unsigned int AddCriticalPacket(unsigned int _playerUid, sf::Packet _pack);
 			void AddConnection(unsigned int newUid, ConnectionData dir);
 
+			int ConnectedUsersCount();
+
 			void Send(sf::Packet _pack, ConnectionData dir);
 			void SendBroadcast(sf::Packet _pack, unsigned int _pingTime = 0);
+			void SendBroadcastWithException(sf::Packet _pack, unsigned int _excludedUserId, unsigned int _pingTime = 0);
 		private:
 			Server();
 			bool isRunning;
@@ -61,7 +74,6 @@ namespace Network {
 			//std::map<ConnectionData&, unsigned int> connectionsIds;
 
 
-
 			std::map<unsigned int, std::queue<sf::Packet>> accumulatedCommands;
 			std::map<unsigned int, Proxy> criticalPackets;
 			std::map<unsigned int, std::pair<ConnectionData, sf::Packet>> nonMemberCriticalPackets;
@@ -76,7 +88,7 @@ namespace Network {
 
 			void(*FunctionProtocol)(Server &_server, ConnectionData dir, sf::Packet& packet);
 			//If simulation isn't valid (return false) correctionPacket gets written by reference.
-			bool(*SimulationProtocol)(sf::Packet _packet, sf::Packet* _correctionPacket);
+			bool(*SimulationProtocol)(Server &_server, unsigned int _playerId, sf::Packet _packet, sf::Packet* _correctionPacket);
 		};
 
 		class Client {
